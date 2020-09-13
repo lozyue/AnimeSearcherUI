@@ -1,0 +1,52 @@
+import Vue from 'vue'
+import App from './App.vue'
+import router from './router'
+import vuetify from './plugins/vuetify'
+import axios from 'axios'
+import Hls from 'hls.js'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+window.Hls = Hls;
+var mypath = window.location.pathname;
+axios.defaults.baseURL = 'http://127.0.0.1:6001/';
+axios.interceptors.request.use(function (lzyConfigs){
+    if(lzyConfigs.method==='get'){lzyConfigs.data=true;}
+    lzyConfigs.withCredentials = false;
+    
+    NProgress.start();
+    
+    return lzyConfigs;
+});
+axios.interceptors.response.use(function(config){
+  
+  NProgress.done();
+  return config;
+})
+Vue.prototype.$http = axios;
+router.beforeEach(function (to, from, next){
+  if(to.path == from.path) return console.log('跳转了重复的路由');
+
+  var amendURL=to.path;
+  if(amendURL ==='/') next('/index');
+  if(mypath.length > 1 && amendURL.indexOf(mypath)===-1){
+    amendURL = mypath + to.path;
+    if(to.path.length>1 && amendURL.substr(-1)==='/') {
+      return next(amendURL.substr(0,amendURL.length-1));
+    }
+  }
+  if(from.name==null && to.path.length<='/result/' && to.path.indexOf('/result')!==-1) return next('/index');
+  if(to.path.length>1 && amendURL.substr(-1)==='/') {
+    var a=amendURL.substr(0,amendURL.length-1);
+    return next(a);
+  }
+  
+  return next(); 
+});
+Vue.config.productionTip = false
+
+new Vue({
+  router,
+  vuetify,
+  render: h => h(App)
+}).$mount('#app')
