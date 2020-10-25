@@ -3,6 +3,8 @@ import VueRouter from 'vue-router'
 import HelloWorld from '../components/HelloWorld.vue'
 import Home from '../components/Home.vue'
 import Details from '@/components/Details.vue'
+// import Dplayer from '@/components/Dplayer.vue'
+import TVLive from '@/components/TVLive.vue'
 
 Vue.use(VueRouter)
 
@@ -28,6 +30,14 @@ const routes = [
     ]
   },
   {
+    path:'/tvlive',
+    name:'tvlive',
+    component: TVLive,
+    children:[
+      {path:':tvEpisode'}
+    ]
+  },
+  {
     path: '/about',
     name: 'About',
     component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
@@ -37,4 +47,6 @@ const routes = [
 const router = new VueRouter({
   routes
 })
+
+
 export default router

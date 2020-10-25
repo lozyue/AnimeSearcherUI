@@ -1,5 +1,6 @@
 <template>
   <div class="home">
+
     <v-container>
       <v-row>
         <p class="results" v-html="searchStatu"></p>
@@ -35,7 +36,7 @@
                       class="lightbox white--text pa-4 pt-0 pb-0 fill-height"
                     >
                       <v-col class="lzydescription">
-                        <div class="lzytext white--text" v-html="item.description?item.description:'直接点开吧，简介丢了'"></div>
+                        <div class="lzytext white--text" v-html="item.description?item.description:'简介走丢了，点进去看看'"></div>
                       </v-col>
                     </v-row>
                   </v-img>
@@ -47,17 +48,17 @@
                   >《{{item.title}}》</a>
                 </div>
 
-                <v-card-actions>
+                <v-card-actions class="mt-0 pt-0">
                   <v-spacer></v-spacer>
                   <v-row no-gutters align="center" justify="space-between" class="meta">
                     <v-col>
-                      <span>
+                      <span title="资源引擎">
                         <v-icon color="red">mdi-hammer-screwdriver</v-icon>
                         {{item.engine.substr(item.engine.lastIndexOf('.')+1,item.engine.length)}}
                       </span>
                     </v-col>
                     <v-col md="6">
-                      <span>
+                      <span title="分类">
                         <v-icon color="red">mdi-folder-heart-outline</v-icon>
                         {{item.category}}
                       </span>
@@ -66,6 +67,9 @@
                 </v-card-actions>
               </v-card>
               </v-row>
+            
+            
+          
         </v-col>
       </v-row>
     </v-container>
@@ -73,9 +77,14 @@
 </template>
 
 <script>
+// @ is an alias to /src
+
 export default {
   name: "Home",
   props: ["searchVal","searching"],
+  // components: {
+  //   HelloWorld
+  // },
   data: () => ({
     myflex: 4,
     searchStatu: "",
@@ -84,6 +93,10 @@ export default {
     currentPath: window.location.pathname,
     
     loading : true,
+    // Vuetify components provide
+    // a theme variable that is
+    // used to determine dark
+    // inject: ["theme"],
   }),
   methods: {
     getDetail: function(url) {
@@ -91,7 +104,6 @@ export default {
     }
   },
   created() {
-    
     if (this.searched) this.searchStatu = "正在搜索……";
     else{
       if(this.$route.params.search!==null && this.$route.params.search){
@@ -100,7 +112,10 @@ export default {
         this.$router.push('/index');
       }
       this.searchStatu = "输入关键字然后 Go Search 吧！";
+      // this.loading = false;
     }
+    // 增加用户活动值
+    this.$emit("addAction","userFocus");
   },
   watch: {
     searchVal: function(val) {
@@ -111,6 +126,7 @@ export default {
       this.loading = false;
     },
     searching: function(val){
+      console.log('searching你变了很多'+val)
       if(val){
         this.loading = true;
         this.searched = true;
@@ -120,11 +136,15 @@ export default {
         this.searched = false;
       }
     }
+  },
+  destroyed(){
+    this.$emit('addAction','userNoFocus');
   }
 };
 </script>
 <style scoped>
 .box {
+  /* max-height: 400px; */
   min-width: 300px;
   margin: 10px auto;
   z-index: 1;
@@ -142,6 +162,7 @@ export default {
   margin: 10px 6px;
   width: 270px;
   border-radius: 15px;
+  /* min-width: 300px; */
 }
 .meta {
   font-size: 12px;
@@ -183,10 +204,13 @@ export default {
 .lzytitle {
   padding: 6px;
   font-size: 16px;
-  margin: 8px auto auto 10px;
-  height: 30px;
+  margin: 0 auto auto 10px;
+  /* height: 30px; */
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.lzytitle a.lzylink{
+  font-size: 14px;
 }
 .lzytext {
   padding: 6px 12px;

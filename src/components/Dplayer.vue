@@ -10,6 +10,8 @@
 </template>
 
 <script>
+// import VueDPlayer from "vue-dplayer";
+// import "vue-dplayer/dist/vue-dplayer.css";
 import VueDPlayer from './vue-dplayer-raw.vue';
 import logoImg from '@/assets/logo.jpg';
 
@@ -20,6 +22,10 @@ export default {
     "d-player": VueDPlayer
   },
   data: () => ({
+    // dplayer: $refs.player.dp,
+    // options:[],
+
+    playbackSpeed:[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
     video: {
       quality: [
         {
@@ -36,6 +42,10 @@ export default {
     logo: logoImg,
     autoplay: false,
     player: null,
+    danmaku:{
+      bottom:'46px',
+      addition:[], // 额外外挂弹幕，可以合并多个源
+    },
     contextmenu: [
       {
         text: "AnimeSercher",
@@ -59,13 +69,15 @@ export default {
   },
   mounted() {
     const player = this.$refs.player.dp;
-    console.log([player, this.dplayer]);
   },
   watch:{
     mytestStr:function(newstr){console.log(newstr);},
     playersettings:function(set){
       console.log("设置发生了改变！")
+      
       const player = this.$refs.player.dp;
+      console.log(set);
+      console.log(player)
       }
   }
 };

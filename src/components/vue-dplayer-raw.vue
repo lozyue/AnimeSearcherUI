@@ -3,8 +3,9 @@
 </template>
 
 <script>
-import DPlayer from "DPlayer";
-import "vue-dplayer/dist/vue-dplayer.css";
+import DPlayer from "dplayer"; // 直接安装dplayer
+import "vue-dplayer/dist/vue-dplayer.css"; // 需要安装vue-dplayer
+// 出依赖未找到的错误时除了重装 dplayer和vue-dplayer还需重装core-js
 
 export default {
   props: {
@@ -108,6 +109,12 @@ export default {
     });
     player.on("canplay", () => {
       this.$emit("canplay");
+    });
+    player.on("fullscreen_cancel", () => {
+      this.$emit("fullscreen_cancel");
+    });
+    player.on("fullscreen", () => {
+      this.$emit("fullscreen");
     });
     player.on("playing", () => {
       this.$emit("playing");

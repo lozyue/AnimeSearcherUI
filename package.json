@@ -9,13 +9,16 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "core-js": "^3.6.4",
-    "hls.js": "^0.14.10",
+    "core-js": "^3.6.5",
+    "dplayer": "^1.26.0",
+    "hls.js": "^0.14.14",
+    "undefined": "^undefined",
     "vue": "^2.6.12",
     "vue-dplayer": "^0.0.10",
     "vue-progressbar": "^0.7.5",
     "vue-router": "^3.1.6",
-    "vuetify": "^2.2.11"
+    "vuetify": "^2.2.11",
+    "webtorrent": "^0.108.6"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.3.0",
