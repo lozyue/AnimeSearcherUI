@@ -1,7 +1,8 @@
 <template>
   <v-app :style="!lzyPublicSettingsStorage.theme?'':'background:transparent'">
+
     <!-- app-bar的hover出现触发器 -->
-    <div @mouseenter="scrollBehavior.userFocus=true" style="position:relative;top:0;height: 32px;margin-top: 0px;left: 0px;right: 0px;z-index:0;"></div>
+    <div @mouseenter="scrollBehavior.userFocus=true" style="position:fixed;top:0;height: 32px;margin-top: 0px;left: 0px;right: 0px;z-index:4;"></div>
     <transition name="fadeUp">
     <v-app-bar v-show="scrollBehavior.userFocus" class="dropIn" app color="pink" dark>
       <div class="d-flex align-center">
@@ -22,11 +23,14 @@
           </template>
           <span>在当前窗口加载主页</span>
         </v-tooltip>
+
         <a class="lzylink" :href="currentPath.length===1?'/#':currentPath+'#'" target="_blank">
           <h2>AnimeSearcher</h2>
         </a>
       </div>
+
       <v-spacer></v-spacer>
+
       <v-btn
         text
         @click.stop="lzycoreMsg.push('userFocus'),searchBox=!searchBox && $vuetify.goTo(-200,{offset:-200,duration:256,easing:'easeInOutCubic'});"
@@ -101,16 +105,17 @@
         <v-col>
           <transition name="lzymsg">
             <!-- 目前最多支持同时出现三个消息条，支持html，找不到更好的解决方案了 -->
-            <v-alert class="msgbar" v-if="showMsg['info']" dense border="left" :type="type['info']" v-html="msg['info']"></v-alert>
+            <v-alert class="msgbar" v-if="showMsg['info']" @click="lzymessageCallback(showMsgCallback['info'])" dense border="left" :type="type['info']" v-html="msg['info']"></v-alert>
           </transition>
           <transition name="lzymsg">
-            <v-alert class="msgbar" v-if="showMsg['warning']" dense border="left" :type="type['warning']" v-html="msg['warning']"></v-alert>
+            <v-alert class="msgbar" v-if="showMsg['warning']" @click="lzymessageCallback(showMsgCallback['warning'])" dense border="left" :type="type['warning']" v-html="msg['warning']"></v-alert>
           </transition>
           <transition name="lzymsg">
-            <v-alert class="msgbar" v-if="showMsg['error']" dense border="left" :type="type['error']" v-html="msg['error']"></v-alert>
+            <v-alert class="msgbar" v-if="showMsg['error']" @click="lzymessageCallback(showMsgCallback['error'])" dense border="left" :type="type['error']" v-html="msg['error']"></v-alert>
           </transition>
         </v-col>
       </v-row>
+      
       <!-- 搜索区域 -->
       <transition name="lzysearch">
         <v-row v-show="searchBox" no-gutters align="center" justify="center" class="mt-12">
@@ -157,6 +162,7 @@
           <v-col cols="1"></v-col>
         </v-row>
       </transition>
+
       <div class="updateBox" transition="slide-y-reverse-transition">
         <v-snackbar
           v-model="showUpdateSnackbar"
@@ -167,11 +173,9 @@
             <span>{{!pubInfo.needUpdate ? "当前版本":"发现新版本"}}：<a target="_blank" :href="pubInfo.version.url">v{{pubInfo.version.tag}} </a><i>(点我传送Github)</i></span>
             <span style="float:right"><time><i>{{pubInfo.version.time.slice(0,10)}}</i></time></span>
           </p>
-          <div>简介：{{pubInfo.version.describe}}</div>
+          <div>简介：<span v-html="pubInfo.version.describe"></span></div>
           <div>下载{{!pubInfo.needUpdate?"链接":"更新"}}：<a href="https://zaxtyson.lanzous.com/b0f1ukafc" target="_blank">蓝奏云下载windows安装包</a></div>
-          <!-- <div></div> -->
           <template v-slot:action="{ attrs }">
-            <!-- <div> -->
               <v-btn
                 color="indigo"
                 text
@@ -180,14 +184,13 @@
               >
                 Close
               </v-btn>
-            <!-- </div> -->
           </template>
         </v-snackbar>
       </div>
+
       <!-- 主题切换 -->
       <transition>
       <div id="lzySettingPanel" v-show="scrollBehavior.userFocus" class="bounceInUp">
-        <!-- <div class="panel"></div> -->
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
             <div class="gear"
@@ -203,67 +206,67 @@
         </v-tooltip>
       </div>
       </transition>
-      <!-- 滚动到顶部 -->
       <transition>
       <div v-show="scrollBehavior.userFocus" id="lzyScroll" title="回顶" class="bounceInUp animated" @click="$vuetify.goTo(-200,{offset:999,duration:512,easing:'easeInOutCubic'})">
       </div>
       </transition>
-      <router-view :key="lzyupdateComponent" :searchVal="searchVal" :history="searchHistory" :searching="searching" @message="lzymessage" @setHistory="lzysetSearchHistory" @search='onSearch' @addAction="lzysendMessage"></router-view>
+      <router-view :key="lzyupdateComponent" :searchVal="searchVal" :history="searchHistory" :searching="searching" @setSearchHistory="lzysetSearchHistory" @search='onSearch' 
+      @message="lzymessage" 
+      @lzyglobalSettings="lzyControlSettings" 
+      @addAction="lzysendMessage">
+      </router-view>
     </v-main>
   </v-app>
 </template>
 
 <script>
 import _ from "lodash";
-// import logoImg from '@/assets/logo.png'
 
 export default {
   name: "App",
 
   data: () => ({
-    // 全局设置项暂存 和 默认设置
     lzyPublicSettingsStorage:{
-      theme:'', // 主题切换,可选：`fantasy`<梦幻>、 ``<默认>
-      immerse: true, // 沉浸模式
+      theme:'',
+      immerse: true,
+      matchDanmaku: 2,
+      matchDeadline: 65,
+      matchSelectedBySequence: false,
     },
-    // 全局状态信息共享
     pubInfo:{
       version:{
-        tag:'0.9.9',
-        url:'https://github.com/zaxtyson/AnimeSearcher/releases/tag/0.9.8',
-        describe:'v0.9.9优化版带着新番表和TVlive全新来袭，增强弹幕匹配，适应多个弹幕源。自动检查更新和进入沉浸模式！',
-        time:'2020-10-25',
+        tag:'1.0.0',
+        url:'https://github.com/zaxtyson/AnimeSearcher/releases',
+        describe:'v1.0.0版发布，视频观看体验大优化！更多特色期待未来版本重构吧',
+        time:'2020-12-14',
       },
       needUpdate:false,
       
     },
-    // 行为消息
     scrollBehavior:{
       offsetTop:0,
       direction:'none',
       same:0,
-      hasScrolled:240, // 初始维持一分钟
+      hasScrolled:240,
       userFocus:true,
     },
-    // 全局消息队列
     lzycoreMsg:[],
     coreIntervalHandle:0,
-    // 无用的函数过程中的临时数据
     tempData:{scrollAnimationID:""},
 
-    showUpdateSnackbar:false, // 消息条显示
+    showUpdateSnackbar:false,
     searchBox: true,
     searching: false,
     loading: true,
     searchStr: "",
     searchHint:"点击搜索开启追番追剧亦或追电影之旅",
     searchVal: [],
-    // 历史记录
     showHistory: false,
     searchHistory:[],
     msg: {'info':'','warning':'','error':''},
     showMsg: {'info':false,'warning':false,'error':false},
-    type: {'info':'info','':'warning','error':'error'}, // 可选值：error warning success info
+    showMsgCallback: {'info':null,'warning':null,'error':null},
+    type: {'info':'info','':'warning','error':'error'},
     snackMsgQueue: [ [], [], [] ],
     barCounts: 2,
     currentPath: window.location.pathname,
@@ -283,9 +286,6 @@ export default {
   }),
   methods: {
     onSearch: function(str=null, newTable='') {
-      // $vuetify.goTo(target, options)
-
-      // this.$vuetify.goTo(1000,{offset:200,duration:256,easing:easeInOutCubic});
       if(str===null || !str){
         if(newTable==='new') return window.open( (this.currentPath.length===1?'/#':this.currentPath+'#')+'/result/'+this.searchStr);
         this.search();
@@ -293,51 +293,53 @@ export default {
       else{
         this.searchStr = str;
         if(newTable==='new') return window.open( (this.currentPath.length===1?'/#':this.currentPath+'#')+'/result/'+this.searchStr);
-        // if(this.searchStr=='') this.searchStr = str;  
         this.search(str);
       }
       if (this.$route.path.indexOf("/result") === -1)
         this.$router.push("/result/"+(str!==null?str:this.searchStr) );
-      this.searching = Math.random()+1; // 传递更新状态
-      // 关闭设置面板，如果打开了的话
+      this.searching = Math.random()+1;
       this.showSettings=false;
     },
     search: async function(str=null) {
+      const _this=this;
       const res = await this.$http
         .get("/search/" + (str!==null?str:this.searchStr) )
         .catch(function(e) {
-          console.log(e);
-          this.lzymessage("获取搜素结果失败", "error");
-          this.searchVal = [];
+          _this.lzymessage("获取搜素结果失败", "error");
+          _this.searchVal = [];
         });
-
       if (typeof (res.data) == "undefined" || _.isEmpty(res.data)) {
-
         this.lzymessage("获取搜索结果为空", "info");
         this.searchVal = [];
         return false;
       }
       this.searchVal = res.data;
-      this.searchBox = false;
+      if(this.$route.path.indexOf("/result/")===-1) this.searchBox = false;
       this.scrollBehavior.hasScrolled+=120;
     },
-    lzymessage: function(str, type = "success", id=0, duration=3999) {
+    lzymessage: function(str, type = "success", id=0, duration=3999, onClick=function(){}) {
       if(id>2){console.log("暂最多同时只支持三个消息条"); return false;}
       var _this = this;
       var msgControl = id===0?'info':id===1?'warning':id===2?'error':'info';
       this.msg[msgControl] = str;
       this.type[msgControl] = type;
       this.showMsg[msgControl] = true;
+      this.showMsgCallback[msgControl] = onClick;
       this.snackMsgQueue[id].forEach(function(handle) {
         clearTimeout(handle);
       });
       this.snackMsgQueue[id].push(
         setTimeout(function() {
           _this.showMsg[msgControl] = false;
+          _this.showMsgCallback[msgControl] = null;
         }, duration)
       );
       return true;
-
+    },
+    lzymessageCallback(callback){
+      var _self = this,
+          _args = arguments;
+      if(!!callback) callback.apply(_self, _args);
     },
     lzyForceUpdate(){
       if(this.$route.path.indexOf('/index')===-1)
@@ -350,8 +352,6 @@ export default {
       var _this = this;
       this.$http.get('/settings').then(function(res){
         if(typeof(res)==='undefined' || _.isEmpty(res.data) || !res.data.hasOwnProperty("engines") || !res.data.hasOwnProperty('danmaku') ) return _this.lzymessage("获取设置项失败,请确保服务端已运行!","error",2);
-        // _this.switchEngines = {};
-        // if(update) _this.switchEngines = {}, _this.switchDanmaku={};
         function transformObject(engines){
           var  i=0, mark=-1, ObjectData={};
           for(var k in engines){
@@ -367,24 +367,21 @@ export default {
         }
         _this.switchDanmaku=transformObject(res.data.danmaku);
         _this.switchEngines=transformObject(res.data.engines);
-        // if(update) _this.switchEngines.reverse().reverse(),_this.switchDanmaku.reverse().reverse();
       }).catch(function(e){console.log(e);});
     },
     postEnginesSetting:async function(name, id){
       const res =await this.$http.post('/settings/engine',{name:'api.engines.'+name,enable: this.switchEngines[id].value}).catch(function(e){console.log(e);});
       if(res.status==200) this.lzymessage("已经成功"+(this.switchEngines[id].value?'开启':'关闭')+"了引擎"+name,"success",1);
       else{
-        this.switchEngines[id].value=!this.switchEngines[id].value; // 撤销设置
+        this.switchEngines[id].value=!this.switchEngines[id].value;
         this.lzymessage("设置失败！已撤销设置","error",2);
       }
     },
     postDanmakuSetting:async function(name,id){
       const res = await this.$http.post('/settings/danmaku',{name:'api.danmaku.'+name,enable: this.switchDanmaku[id].value}).catch(function(v){console.log(v)});
-      
-      console.log([res,name,this.switchDanmaku[id].value])
       if(res.status==200) this.lzymessage("成功"+(this.switchDanmaku[id].value?'开启':'关闭')+"了弹幕源"+name,"success",1);
       else{
-        this.switchDanmaku[id].value=!this.switchDanmaku[id].value; // 撤销设置
+        this.switchDanmaku[id].value=!this.switchDanmaku[id].value;
         this.lzymessage("设置失败！已撤销设置","error",2);
       }
     },
@@ -394,24 +391,57 @@ export default {
       else this.postDanmakuSetting(name,id);
     },
     showAbout(){
-      // 来自2020-08-27生日当天的灵感 消息条完成设计
       var _this=this;
       _this.lzymessage('API服务：<span style="font-weight:600;color:#e97171">@Zaxtyson<span>','info',0,4399);
       setTimeout(function(){_this.lzymessage('UI设计：<span style="font-weight:600;color:#e97171">  @Lozyue<span>','info',1,4699);},666);
       setTimeout(function(){_this.lzymessage('<a href="https://github.com/zaxtyson/AnimeSearcher" target="_blank">Github地址(点我)</a>','success',2,4999);},999);
-      // 显示当前版本信息:
       this.showUpdateSnackbar=true;
     },
     checkUpdate(){
       this.lzymessage("正在检查更新……","info",0);
-      var _this = this;
+      var _this = this,
+          checkFlag = -1;
       this.$http.get('https://api.github.com/repos/zaxtyson/animesearcher/releases/latest').catch(function(e){
         _this.lzymessage(`唔，检查更新失败了，请检查网络`,"error",1);console.error(e)})
       .then(function(res){
         const data=res.data;
-          // data.created_at,data.tag_name,data.body,data.html_url
-        // ])
-        if(_this.pubInfo.needUpdate===false && parseInt(data.tag_name.replaceAll('.','')) < parseInt(_this.pubInfo.version.tag.replaceAll('.','')) ) return _this.lzymessage("当前已是最新版：v"+_this.pubInfo.version.tag,"success",1);
+        var currentMark=getInsertedNumbers(_this.pubInfo.version.tag), cloudMark=getInsertedNumbers(data.tag_name);
+
+        if(weightSum(cloudMark) > weightSum(currentMark) ) checkFlag++;
+        else if(weightSum(cloudMark) === weightSum(currentMark)){
+          if(getInsertedNumbers(data.tag_name,false,true) > getInsertedNumbers(_this.pubInfo.version.tag,false,true)) checkFlag++;
+          if(cloudMark.length===currentMark.length) checkFlag--;
+          if(getInsertedNumbers(_this.pubInfo.version.tag,false).length===getInsertedNumbers(data.tag_name,false).length) checkFlag++;// 全部纯数字长度相等，两种情况相等时数字长度比较抵消
+          if(data.tag_name.length > _this.pubInfo.version.tag.length) checkFlag++;
+          else if(data.tag_name.length < _this.pubInfo.version.tag.length) checkFlag--;
+        }
+        if(checkFlag < 0){
+          _this.pubInfo.version.describe=data.body;
+          return _this.lzymessage("当前已是最新版：v"+_this.pubInfo.version.tag,"success",1);
+        }
+        function weightSum(countStr){
+          var mark = 0;
+          countStr.replace(/·-\s/g,'').split('.').forEach(function(v,i,arr){
+            mark += parseInt(v)*Math.pow(10,arr.length - i);
+          });
+          return mark;
+        }
+        function getInsertedNumbers(mixedStr, consistent=true, sum=false){
+          var result;
+          mixedStr=mixedStr.replace(/\s/g,'');
+          if(sum) result=0;
+          else result='';
+          for(let i=0;i<mixedStr.length;i++){
+            if(sum){
+              result=result + (!isNaN(mixedStr[i]) ? parseInt(mixedStr[i]) : 0) ;
+              continue;
+            }
+            if( !isNaN(mixedStr[i]) || mixedStr[i]==='·' || mixedStr[i]===".") result+=mixedStr[i];// 是 数字 . · 就加上去
+            else if(consistent) break;
+          }
+          return result;
+        };
+
         _this.pubInfo.version = {
           tag:data.tag_name,
           url:data.html_url,
@@ -424,22 +454,16 @@ export default {
       });
     },
     lzysetSearchHistory(mode='new', appendStr=''){
-      console.log(["lzysetSearchHistory调用了",mode])
       switch(mode){
         case 'new':{
-          console.log(['case : new',this.searchStr]);
           let tempIndex=-1;
           if(!_.isEmpty(this.searchStr) ){
             tempIndex=_.indexOf(this.searchHistory,this.searchStr);
             if( tempIndex!==-1 ){
-              // 假装的时间排序
-              console.log("执行了tempIndex===-1的情况")
               this.lzysetSearchHistory('delete');
-              // mode='delete'; // 优化选择 顺序不允许2333
             }
-            this.searchHistory.unshift(_.trim(this.searchStr) ); // 先搜索后添加
+            this.searchHistory.unshift(_.trim(this.searchStr) );
           }else{
-            console.log("记录历史失败;搜索为空或者记录已经存在")
           }
           break;
         }
@@ -451,40 +475,28 @@ export default {
         }
         
         case 'delete':{
-          console.log(['调用了delete',this.searchHistory]);
-          // const temp=this.searchHistory;
-          // this.searchHistory=[];
           if(appendStr.length > 0){
             this.searchHistory = _.pull(this.searchHistory, appendStr);
-            // 单点删除时 使用vue劫持的响应方法使数据立即响应
             this.searchHistory.reverse().reverse();
           }else this.searchHistory = _.pull(this.searchHistory, this.searchStr);
           break;
         }
 
         case 'storage':{
-          console.log(["保存到了localstorage",this.searchHistory])
           window.localStorage.setItem('searchHistory',JSON.stringify(this.searchHistory) );
-          // this.$nextTick(function(){ window.localStorage.setItem('searchHistory',JSON.stringify(this.searchHistory) );})
           break;
         }
         
         case 'clear':{
-          console.log("清空了搜索记录");
           this.searchHistory = [];
           window.localStorage.clear('searchHistory');
           break;
         }
       }
     },
-    // localSettings:function(){
-    //   window.localStorage.setItem('lzysettings',JSON.stringify({theme:this.theme}));
-    // },
-    // 公共设置项存储控制API, 同步保存到localStorage; save load等操作可随便传入`key`
-    lzyControlSettings(key, method="read", value=null){
-      console.log('设置项更改：',key,method,value);
+    lzyControlSettings(key, method="read", value=null, callback=function(v){return v}){
+      let rtValue=null;
       switch (method) {
-        // 设置项更改的lazy模式，非同步保存，在公共action队列中防抖更新，适用于用于设置项更改频繁的情况。
         case 'lazySet':
           this.lzyPublicSettingsStorage[key] = value;
           this.lzycoreMsg.push("lazySettingsSave");
@@ -493,38 +505,34 @@ export default {
           this.lzyPublicSettingsStorage[key] = value;
           window.localStorage.setItem("lzysettings", JSON.stringify(this.lzyPublicSettingsStorage));
           break;
-        // 设置置空
         case 'delete':
           this.lzyPublicSettingsStorage[key] = value;
           window.localStorage.setItem("lzysettings", JSON.stringify(this.lzyPublicSettingsStorage));
           break;
         case 'save':
-          // 保存了设置项
           window.localStorage.setItem("lzysettings", JSON.stringify(this.lzyPublicSettingsStorage));
-          console.log("保存了设置项");
           break;
-        // 加载时载入设置项
         case 'load':
           let temp;
           if( (temp = JSON.parse(window.localStorage.getItem("lzysettings")) )&& !_.isEmpty(temp) )
             Object.assign(this.lzyPublicSettingsStorage,temp);
           else console.error("设置项读取失败！");
           break;
-        // 删除存储的数据
         case 'clear':
           window.localStorage.removeItem("lzysettings");
           break;
-        // 默认读取
+        case 'read':
+          rtValue = this.lzyPublicSettingsStorage[key] || null;// 防止出现undefined值
+          break;
         default:
-          return typeof(this.lzyPublicSettingsStorage[key])!=='undefined'?this.lzyPublicSettingsStorage[key]:false;
+          rtValue = typeof(this.lzyPublicSettingsStorage[key])!=='undefined'?this.lzyPublicSettingsStorage[key]:null;
           break;
       }
+      callback(rtValue);
       return true;
     },
-    // 滚动行为控制
     onScroll:function(){
       var _this = this;
-      // 非沉浸模式下关闭功能
       if(!this.lzyPublicSettingsStorage.immerse){
         window.cancelAnimationFrame(this.tempData.scrollAnimationID);
         return false;
@@ -536,31 +544,24 @@ export default {
         _this.scrollBehavior.hasScrolled++;
         if(_this.scrollBehavior.offsetTop < offset) _this.scrollBehavior.direction='down';
         else _this.scrollBehavior.direction='up';
-        // 暂时只取页面下滑操作
         if('down' === _this.scrollBehavior.direction) _this.scrollBehavior.same>20?_this.scrollBehavior.same++:_this.scrollBehavior.same+=2;
-        else if(_this.scrollBehavior.same >= 3) _this.scrollBehavior.same-=3,_this.scrollBehavior.userFocus = true;; // 三倍递减
-        // 有效的向下滚动操作，此时显示 回顶、主题设置和菜单栏按钮。持续显示2分钟
+        else if(_this.scrollBehavior.same >= 3) _this.scrollBehavior.same-=3,_this.scrollBehavior.userFocus = true;;
         if(_this.scrollBehavior.same>36){
-          console.log("有效的滚动操作");
-          _this.scrollBehavior.hasScrolled++; // 额外增加
+          _this.scrollBehavior.hasScrolled++;
           _this.scrollBehavior.userFocus = true;
         }
         _this.scrollBehavior.offsetTop = offset;
       });
     },
-    // 增加到消息队列的方法 checkUpdate userFocus
     lzysendMessage:function(str){
       this.lzycoreMsg.push(str);
     },
-    // 中央定时器执行的消息处理方法 试试设置为异步 是否能减少卡顿
     lzycoreActions:async function(){
       var _this=this,
-          did_settingUpdate = false, // 单轮触发控制；附带防抖功能,下同
+          did_settingUpdate = false,
           did_lazySettingsSave = false ;
-          
-      // 处理消息队列
       for(let i=0;i<this.lzycoreMsg.length;i++){
-        switch(this.lzycoreMsg.shift()){ // 队列弹出
+        switch(this.lzycoreMsg.shift()){
           case 'checkUpdate':
             this.checkUpdate();
             break;
@@ -568,34 +569,33 @@ export default {
             this.scrollBehavior.hasScrolled+=30;
             break;
           case 'userNoFocus':
-            this.scrollBehavior.hasScrolled>99?this.scrollBehavior.hasScrolled-=~~(this.scrollBehavior.hasScrolled/5*3):this.scrollBehavior.hasScrolled>23?this.scrollBehavior.hasScrolled=24:this.scrollBehavior=0;
+            this.scrollBehavior.hasScrolled>99?this.scrollBehavior.hasScrolled-=~~(this.scrollBehavior.hasScrolled/5*3):this.scrollBehavior.hasScrolled>23?this.scrollBehavior.hasScrolled=24:this.scrollBehavior.hasScrolled=0;
             break;
           case 'lazySettingsSave':
             if(!did_lazySettingsSave){
               this.lzyControlSettings("lzysettings","save");
               did_lazySettingsSave=true;
-            }
-          case 'settingUpdate': // 一轮仅触发一次
+            };
+            break;
+          case 'settingUpdate':
             if(!did_settingUpdate){
-              this.getEngines(true); // 更新弹幕设置
+              this.getEngines(true);
               did_settingUpdate=true;
             }
+            break;
           default :
             break;
         }
       }
-      // 每次都会执行的方法,沉浸模式核心
       var immerseMode=function(){
         if(_this.scrollBehavior.hasScrolled>23) _this.scrollBehavior.userFocus=true,_this.scrollBehavior.hasScrolled -= ~~(_this.scrollBehavior.hasScrolled/2 - Math.log(_this.scrollBehavior.hasScrolled+1));
         else _this.scrollBehavior.userFocus=false,_this.showSettings=false;
         
         if(_this.scrollBehavior.hasScrolled>0) _this.scrollBehavior.hasScrolled--;
         else{
-          // 用户沉浸模式有一段时间 应用免打扰
           _this.showUpdateSnackbar = false;
+          _this.searchBox = false;
         };
-        console.log("scrollBehavior.hasScrolled：",_this.scrollBehavior.hasScrolled);
-        // 修补`settingUpdate` Action 后续设置项为更新的问题
       };
       if(this.lzyPublicSettingsStorage.immerse) immerseMode();
     }
@@ -619,29 +619,24 @@ export default {
     }
   },
   created:function(){
-    // this.$insProgress.start();
     var _this=this;
-    // 读取设置和历史项
     try {
       this.lzyControlSettings("lzysettings","load");
       this.lzysetSearchHistory('read');
       this.getEngines();
     } catch (error) {
-      console.log("读取历史记录失败，格式错误？");
       this.lzymessage("读取搜素历史记录失败");
     }
   },
   mounted() {
     var _this=this;
     this.loading=false;
-    // window.scroll = this.onScroll;
     window.addEventListener("scroll",this.onScroll);
     
     setTimeout(function(){
       _this.checkUpdate();
     },10*60*1000);
-    // 中央消息处理器 5s 一次
-    this.coreIntervalHandle = setInterval(this.lzycoreActions, 5*999);
+    this.coreIntervalHandle = setInterval(this.lzycoreActions, 5*1024);
   },
   destroyed(){
     clearInterval(this.coreIntervalHandle);
@@ -708,7 +703,7 @@ export default {
 .settingPanel span.aboutBtn:hover,.settingPanel span.updateBtn:hover{ 
   color: #ff3737;
   background: #c9c9c9;
-  text-decoration: underline;
+  /* text-decoration: underline; */
 }
 /* 主题切换按钮 */
 #lzySettingPanel{
@@ -951,10 +946,13 @@ a div .v-image__image--preload{
   height:118px;
 }
 .fantasy .v-main__wrap .container{
-  opacity: .78;
+  opacity: .9;
+}
+.fantasy .v-main__wrap .container .lzytransparent{
+  opacity: 0.86;
 }
 .fantasy .episodeVer{
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(53, 46, 46, 0.7);
   padding:0  0 10px 36px;
   border-radius: 15px;
 }

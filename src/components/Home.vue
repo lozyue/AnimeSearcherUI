@@ -6,7 +6,7 @@
         <p class="results" v-html="searchStatu"></p>
       </v-row>
       <v-row no-gutters>
-        <v-col cols="12" class="boxw">  
+        <v-col cols="12" class="lzytransparent boxw">  
               <v-row v-if="loading" align="center" justify="space-around">
                 <v-sheet
                   v-for="i in 12" :key=i
@@ -19,7 +19,7 @@
               <v-row v-else align="center" justify="space-around">
               <v-card class="lzycontainer" transition="v-scale-transition" v-for="(item, i) in searchBack" :key="i">
                 <a
-                  class="lzylink"
+                  class="lzylink resCard"
                   target="_blank"
                   :href="currentPath.length===1?'/#/details'+item.url.substr(item.url.lastIndexOf('/')):currentPath+'#/details'+item.url.substr(item.url.lastIndexOf('/') )"
                 >
@@ -67,9 +67,6 @@
                 </v-card-actions>
               </v-card>
               </v-row>
-            
-            
-          
         </v-col>
       </v-row>
     </v-container>
@@ -77,14 +74,10 @@
 </template>
 
 <script>
-// @ is an alias to /src
 
 export default {
   name: "Home",
   props: ["searchVal","searching"],
-  // components: {
-  //   HelloWorld
-  // },
   data: () => ({
     myflex: 4,
     searchStatu: "",
@@ -93,10 +86,6 @@ export default {
     currentPath: window.location.pathname,
     
     loading : true,
-    // Vuetify components provide
-    // a theme variable that is
-    // used to determine dark
-    // inject: ["theme"],
   }),
   methods: {
     getDetail: function(url) {
@@ -112,9 +101,7 @@ export default {
         this.$router.push('/index');
       }
       this.searchStatu = "输入关键字然后 Go Search 吧！";
-      // this.loading = false;
     }
-    // 增加用户活动值
     this.$emit("addAction","userFocus");
   },
   watch: {
@@ -126,7 +113,6 @@ export default {
       this.loading = false;
     },
     searching: function(val){
-      console.log('searching你变了很多'+val)
       if(val){
         this.loading = true;
         this.searched = true;
@@ -142,7 +128,7 @@ export default {
   }
 };
 </script>
-<style scoped>
+<style>
 .box {
   /* max-height: 400px; */
   min-width: 300px;
@@ -158,10 +144,14 @@ export default {
 .urlimg {
   cursor: pointer;
 }
+.lzycardcover .v-image__image--cover{transition: all .3s linear;}
+.lzycontainer:hover .lzycardcover .v-image__image--cover{
+  transform: scale(1.1);
+}
 .lzycontainer {
   margin: 10px 6px;
   width: 270px;
-  border-radius: 15px;
+  border-radius: 15px!important;
   /* min-width: 300px; */
 }
 .meta {
@@ -174,8 +164,8 @@ export default {
   background: rgba(41, 41, 41, 0.56);
   border-radius: 8px;
 }
-.lzydescription{margin-bottom: 12px}
-.lzydescription:hover .lzytext,
+.lzydescription{margin-bottom: 24px;margin-bottom: calc(10%);}
+/* .lzydescription:hover .lzytext, */
 .lzycontainer:hover .lzydescription .lzytext {
   opacity: 1;
   animation: bounceInUp 0.6s linear;
@@ -218,5 +208,9 @@ export default {
   vertical-align: middle;
   font-size: 14px;
   text-indent: 1em;
+}
+.resCard{
+  height: 362px;
+  overflow: hidden;
 }
 </style>

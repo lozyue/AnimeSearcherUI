@@ -22,8 +22,6 @@ export default {
     "d-player": VueDPlayer
   },
   data: () => ({
-    // dplayer: $refs.player.dp,
-    // options:[],
 
     playbackSpeed:[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
     video: {
@@ -63,8 +61,6 @@ export default {
   }),
   methods: {
     play() {
-      console.log("play roll back");
-      console.log(this.video.quality);
     }
   },
   mounted() {
@@ -73,11 +69,8 @@ export default {
   watch:{
     mytestStr:function(newstr){console.log(newstr);},
     playersettings:function(set){
-      console.log("设置发生了改变！")
       
       const player = this.$refs.player.dp;
-      console.log(set);
-      console.log(player)
       }
   }
 };

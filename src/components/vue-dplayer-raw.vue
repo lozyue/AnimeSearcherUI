@@ -4,8 +4,6 @@
 
 <script>
 import DPlayer from "dplayer"; // 直接安装dplayer
-import "vue-dplayer/dist/vue-dplayer.css"; // 需要安装vue-dplayer
-// 出依赖未找到的错误时除了重装 dplayer和vue-dplayer还需重装core-js
 
 export default {
   props: {
@@ -48,10 +46,6 @@ export default {
     },
     video: {
       type: Object
-      // required: true,
-      // validator(value) {
-      //  return typeof value.url === 'string'
-      // }
     }
   },
   data() {
@@ -88,10 +82,6 @@ export default {
             url: this.video.quality[1].url,
             name: this.video.quality[1].name
           },
-          // {
-          //   url: this.video.quality[2].url,
-          //   name: this.video.quality[2].name
-          // }
         ],
         thumbnails: this.video.thumbnails,
         type: this.video.type
@@ -125,7 +115,10 @@ export default {
     player.on("error", (emsg) => {
       this.$emit("error",emsg);
     });
-  }
+  },
+  beforeDestroy(){
+    this.$emit("beforeDestroy",false,this.dp.video.currentTime);
+  },
 };
 </script>
 

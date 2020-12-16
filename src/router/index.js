@@ -3,7 +3,6 @@ import VueRouter from 'vue-router'
 import HelloWorld from '../components/HelloWorld.vue'
 import Home from '../components/Home.vue'
 import Details from '@/components/Details.vue'
-// import Dplayer from '@/components/Dplayer.vue'
 import TVLive from '@/components/TVLive.vue'
 
 Vue.use(VueRouter)
@@ -25,7 +24,6 @@ const routes = [
     name: 'Details',
     component: Details,
     children:[
-      // {path:':episode(\\d+)' },
       {path:':episode' },
     ]
   },
