@@ -1,7 +1,6 @@
 <template>
   <v-container>
     <v-row justify="space-between">
-      <!-- 侧边栏 -->
       <v-col cols="2">
           <section class="lzyLeftMenu">
             <div v-for="(data,index) in TVList" :key="index">
@@ -13,7 +12,6 @@
         <div id="tvplayer">
           <section style="margin: 0px auto;padding:10px 0px;"><section style="width: 100%;"><section style="width: 100%;display: flex;display: -webkit-flex;justify-content: center;-webkit-align-items: center; -webkit-justify-content: center;overflow: hidden;"><section style="border-bottom-left-radius: 6px;border-top-left-radius: 15px;text-align: center;flex:1;background:rgb(242, 101, 101);"><section style="border:10px solid transparent;border-right-width:48px;border-bottom-width:16px">
             <section style="border-radius:6px ;background:rgb(255,255,255);">
-              <!-- 将Dplayer包裹到这个里面 -->
               <h4 class="player-head">{{playersettings.chanel}}</h4>
               <d-player
                 ref="player"
@@ -143,7 +141,6 @@ export default {
   display: inline-block;
   margin: auto 5px;
 }
-/* padding: 0 auto 0 6px 会提示无效，padding不是margin，是不会auto的*/
 .lzyplayerFooter{
   padding:0 0 0 6px;
   font-size: 12px;

@@ -7,66 +7,66 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="12" class="lzytransparent boxw">  
-              <v-row v-if="loading" align="center" justify="space-around">
-                <v-sheet
-                  v-for="i in 12" :key=i
-                  class="px-3 pt-3 pb-3 col col-3 bg-0"
-                  color="lighten-4"
+          <v-row v-if="loading" align="center" justify="space-around">
+            <v-sheet
+              v-for="i in 12" :key=i
+              class="px-3 pt-3 pb-3 col col-3 bg-0"
+              color="lighten-4"
+            >
+              <v-skeleton-loader class="mx-auto" max-width="300" type="image, article"></v-skeleton-loader>
+            </v-sheet>
+          </v-row>
+            <transition-group v-else class="flip-flex-contianer" name="flip-card" tag="div">
+            <v-card class="lzycontainer" transition="v-scale-transition" v-for="(item, i) in searchBack" :key="i">
+              <a
+                class="lzylink resCard"
+                target="_blank"
+                :href="currentPath.length===1?'/#/details'+item.url.substr(item.url.lastIndexOf('/')):currentPath+'#/details'+item.url.substr(item.url.lastIndexOf('/') )"
+              >
+                <v-img
+                  :src="!!item.cover_url?item.cover_url:null"
+                  lazy-src="../assets/images/default-cover.png"
+                  class="urlimg lzycardcover white--text align-end"
+                  gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+                  width="270px"
                 >
-                  <v-skeleton-loader class="mx-auto" max-width="300" type="image, article"></v-skeleton-loader>
-                </v-sheet>
-              </v-row>
-              <v-row v-else align="center" justify="space-around">
-              <v-card class="lzycontainer" transition="v-scale-transition" v-for="(item, i) in searchBack" :key="i">
-                <a
-                  class="lzylink resCard"
-                  target="_blank"
-                  :href="currentPath.length===1?'/#/details'+item.url.substr(item.url.lastIndexOf('/')):currentPath+'#/details'+item.url.substr(item.url.lastIndexOf('/') )"
-                >
-                  <v-img
-                    :src="!!item.cover_url?item.cover_url:null"
-                    lazy-src="../assets/default-cover.png"
-                    class="urlimg lzycardcover white--text align-end"
-                    gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-                    width="270px"
+                  <v-row
+                    align="center"
+                    justify="center"
+                    class="lightbox white--text pa-4 pt-0 pb-0 fill-height"
                   >
-                    <v-row
-                      align="center"
-                      justify="center"
-                      class="lightbox white--text pa-4 pt-0 pb-0 fill-height"
-                    >
-                      <v-col class="lzydescription">
-                        <div class="lzytext white--text" v-html="item.description?item.description:'简介走丢了，点进去看看'"></div>
-                      </v-col>
-                    </v-row>
-                  </v-img>
-                </a>
-                <div class="lzytitle">
-                  <a class="lzylink"
-                    :href="currentPath.length===1?'/#/details'+item.url.substr(item.url.lastIndexOf('/')):currentPath+'#/details'+item.url.substr(item.url.lastIndexOf('/') )"
-                    :title="item.title"
-                  >《{{item.title}}》</a>
-                </div>
-
-                <v-card-actions class="mt-0 pt-0">
-                  <v-spacer></v-spacer>
-                  <v-row no-gutters align="center" justify="space-between" class="meta">
-                    <v-col>
-                      <span title="资源引擎">
-                        <v-icon color="red">mdi-hammer-screwdriver</v-icon>
-                        {{item.engine.substr(item.engine.lastIndexOf('.')+1,item.engine.length)}}
-                      </span>
-                    </v-col>
-                    <v-col md="6">
-                      <span title="分类">
-                        <v-icon color="red">mdi-folder-heart-outline</v-icon>
-                        {{item.category}}
-                      </span>
+                    <v-col class="lzydescription">
+                      <div class="lzytext white--text" v-html="item.description?item.description:'简介走丢了，点进去看看'"></div>
                     </v-col>
                   </v-row>
-                </v-card-actions>
-              </v-card>
-              </v-row>
+                </v-img>
+              </a>
+              <div class="lzytitle">
+                <a class="lzylink"
+                  :href="currentPath.length===1?'/#/details'+item.url.substr(item.url.lastIndexOf('/')):currentPath+'#/details'+item.url.substr(item.url.lastIndexOf('/') )"
+                  :title="item.title"
+                >《{{item.title}}》</a>
+              </div>
+
+              <v-card-actions class="mt-0 pt-0">
+                <v-spacer></v-spacer>
+                <v-row no-gutters align="center" justify="space-between" class="meta">
+                  <v-col>
+                    <span title="资源引擎">
+                      <v-icon color="red">mdi-hammer-screwdriver</v-icon>
+                      {{item.engine.substr(item.engine.lastIndexOf('.')+1,item.engine.length)}}
+                    </span>
+                  </v-col>
+                  <v-col md="6">
+                    <span title="分类">
+                      <v-icon color="red">mdi-folder-heart-outline</v-icon>
+                      {{item.category}}
+                    </span>
+                  </v-col>
+                </v-row>
+              </v-card-actions>
+            </v-card>
+            </transition-group>
         </v-col>
       </v-row>
     </v-container>
@@ -109,7 +109,7 @@ export default {
       this.searched = true;
       this.searchBack = val;
       this.searchStatu =
-        '共找到搜索结果：<span style="color:blue">' + val.length + "</span> 条";
+        '<span style="color:blue">正在搜索ing……，</span>已找到搜索结果：<span style="color:blue">' + val.length + "</span> 条";
       this.loading = false;
     },
     searching: function(val){
@@ -120,6 +120,8 @@ export default {
       }else{
         this.loading = false;
         this.searched = false;
+        this.searchStatu =
+        '搜索完成，共找到搜索结果：<span style="color:blue">' + this.searchBack.length + "</span> 条";
       }
     }
   },
@@ -213,4 +215,27 @@ export default {
   height: 362px;
   overflow: hidden;
 }
+
+.flip-flex-contianer{
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: space-around;
+  justify-items: center;
+  flex-wrap: wrap;
+}
+.flip-flex-contianer > .lzycontainer{
+  display: inline-block;
+  transition: all 1s;
+}
+
+/* Flip Animation */
+.flip-card-leave-active {
+  position: absolute;
+}
+.flip-card-leave-to, .flip-card-enter{
+  opacity: 0;
+  transform: scale(0.3);
+}
+
 </style>

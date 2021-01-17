@@ -10,7 +10,6 @@
           </h1>
         </v-row>
         <v-row class="lzytransparent">
-          <!-- 左侧栏 icon="mdi-message-arrow-right-outline" -->
           <v-col cols="3">
             <v-timeline dense class="lightbule--text" style="user-select:none">
               <v-timeline-item
@@ -22,10 +21,17 @@
                   class="mx-auto"
                   max-width="360"
                 >
+                  <!-- <v-img
+                    class="white--text align-end"
+                    max-width="300px"
+                    src="https://img.xjh.me/random_img.php?return=302&type=bg&ctype=acg"
+                    https://5200.pro/wp-content/uploads/2020/02/IMG_151.jpg
+                    https://5200.pro/wp-content/uploads/2020/03/79690646_p0-副本.jpg
+                  > -->
                   <v-img
                     class="white--text align-end"
                     max-width="300px"
-                    lazy-src="../assets/history.jpg"
+                    lazy-src="../assets/images/history.jpg"
                     :src="['','','https://img.xjh.me/desktop/bg/acg/53428466_p0.jpg','','','https://img.xjh.me/desktop/bg/acg/53428466_p0.jpg','https://img.xjh.me/desktop/bg/acg/64090690_p0.jpg','https://img.xjh.me/random_img.php?return=302&type=bg&ctype=acg'][~~(Math.random()*7)]"
                   >
                     <v-card-title>AnimeSercher动漫站</v-card-title>
@@ -33,25 +39,23 @@
                   <v-card-subtitle class="pb-0">Made with ♡</v-card-subtitle>
                   <v-card-text class="text--primary">
                     <div>响应式路由导航</div>
-                    <div>多重资源引擎 资源丰硕</div>
+                    <div>多重资源引擎 灵动交互</div>
                   </v-card-text>
                 </v-card>
               </v-timeline-item>
               <v-timeline-item icon="mdi-television-box" small>
                 <v-card>
                   <v-card-subtitle>See See TV?</v-card-subtitle>
-                  <v-card-subtitle max-width="120px"><v-img src="../assets/TVlogo.png"></v-img></v-card-subtitle>
+                  <v-card-subtitle max-width="120px"><v-img src="../assets/images/TVlogo.png"></v-img></v-card-subtitle>
                   <v-card-subtitle class="lzylink" @click="$router.push('/tvlive')"><v-icon>mdi-cctv</v-icon>点我看电视</v-card-subtitle>
                 </v-card>
               </v-timeline-item>
-                <!-- icon="mdi-message-arrow-right-outline" -->
               <v-timeline-item
                 icon-color="#fff"
                 color="#E91E63"
                 small
                 v-for="(data,index) in lzyUpdateMsg" :key="index"
               >
-                <!-- <span slot="opposite">Tus eu perfecto</span> -->
                 <v-card
                   class="mx-auto"
                   max-width="360"
@@ -65,24 +69,18 @@
               </v-timeline-item>
             </v-timeline>
           </v-col>
-          <!-- 新番表，本周 -->
           <v-col cols="3">
             <div>
               <span title="上一周" @click="bangumi.current>0?bangumi.current--:bangumi" style="float:left;cursor:pointer;"><v-icon :color="bangumi.current>0?'rgb(255, 82, 82)':'lightgray'">mdi-skip-previous</v-icon></span>
               <span style="font-weight:500;color:#de4077">新番表</span>
               <span title="下一周" @click="bangumi.current<bangumi.total.length-1?bangumi.current++:bangumi" style="float:right;cursor:pointer;"><v-icon :color="bangumi.current<bangumi.total.length-1?'rgb(255, 82, 82)':'lightgray'">mdi-skip-next</v-icon></span>
             </div>
-            <!-- <v-timeline dense class=""> -->
-              <!-- <v-timeline-item small> -->
-                <v-card @click="$router.push('/result/'+data.title)" class="bangumi pb-4" v-for="(data,index) in bangumi.total[bangumi.current].updates" :key="index">
-                  <v-img :src="data.cover" max-width="300px" class="mx-auto"></v-img>
+                <v-card @click="$router.push('/result/'+data.title.trim().replaceAll('/',' '))" class="bangumi pb-4" v-for="(data,index) in bangumi.total[bangumi.current].updates" :key="index">
+                  <v-img :src="data.cover" max-width="300px" class="mx-auto mt-2"></v-img>
                   <v-card-subtitle><span style="float:left;"><span>更新至:</span> {{data.update_to}}</span><span style="float:right;"><time>{{bangumi.today===bangumi.current?data.update_time.slice(10):data.update_time.slice(0,10)}}</time></span></v-card-subtitle>
                   <div class="" style="clear:both;font-size:14px">{{data.title}} </div>
                 </v-card>
-              <!-- </v-timeline-item> -->
-            <!-- </v-timeline> -->
           </v-col>
-          <!-- 右侧内容 -->
           <v-col cols="6">
             <!-- 走马灯 -->
             <v-carousel cycle interval="5000" class="mt-6 lzycarousel" hide-delimiters touchless height="286" width="360">
@@ -108,17 +106,19 @@
                 </v-card-text>
               </v-card>
               <v-card max-width="100%" class="helloPanelItem">
-                  <v-expansion-panels>
+                  <v-expansion-panels :value="0">
                     <v-expansion-panel
                       v-for="(item,index) in showSwitchedCategorys"
                       :key="index"
                     >
                       <v-expansion-panel-header>
-                        <!-- <v-card-subtitle> -->
                         <p class="lzyHead" :style="`border-color:${getRandomColor}`">
                           <span>{{item.name}}</span>
+                          <!-- <span style="float:right">
+                              <v-switch @click="categoryControls[item.type]=!categoryControls[item.type]"></v-switch>
+                              <span>一键开关</span>
+                          </span> -->
                         </p>
-                        <!-- </v-card-subtitle> -->
                       </v-expansion-panel-header>
                       <v-expansion-panel-content>
                         <span class="fastSettings" v-for="(data,i) in item.engines" :key="i">
@@ -127,17 +127,18 @@
                             color="primary"
                             v-model="data.value"
                             :label="data.name"
+                            title="引擎开关"
                             @click.stop="saveEngines(data.name, i, 'engines', index)"
                           ></v-switch>
                         </span>
                         <v-divider></v-divider>
-                        <!-- 防止key重复 -->
                         <span class="fastSettings" v-for="(data,i) in item.danmaku" :key="-i">
                           <v-switch dense
                             color="#eab4f8"
                             class="ma-0"
                             v-model="data.value"
                             :label="data.name"
+                            title="弹幕开关"
                             @click.stop="saveEngines(data.name, i, 'danmaku', index)"
                           ></v-switch>
                         </span>
@@ -150,12 +151,18 @@
                 <v-card-subtitle><p class="lzyHead" style="border-color:#ff6e9f">近期观看：</p></v-card-subtitle>
                 <v-card-text>
                   <div class="lzyalign-left mb-2 historyItem" v-for="(data,i) in lzyplayHistory" :key="i">
-                    <a @click="$emit('search',data.name)">『{{data.name}}』<b style="color:#eaf;">{{data.episode}}</b></a><span title="删除" @click='lzyplayHistory = lzyplayHistory.slice(0,i).concat(lzyplayHistory.slice(i+1,lzyplayHistory.length) ),$emit("lzyglobalSettings","playHistory","lazySet",JSON.stringify(lzyplayHistory))' >✖</span>
+                    <a :title="data.engine+' '+data.date" @click="!data.url?$emit('search',data.name):$router.push(data.url)">
+                      『{{data.name}}』<b style="color:#eaf;">{{data.episode}}</b> <span style="color:pink">{{lodash.getTimeByFloat(data.currentTime)}}</span>
+                    </a>
+                    <span title="删除" @click='lzyplayHistory = lzyplayHistory.slice(0,i).concat(lzyplayHistory.slice(i+1,lzyplayHistory.length) ),$emit("lzyglobalSettings","playHistory","lazySet",JSON.stringify(lzyplayHistory))' >
+                      ✖
+                    </span>
                   </div>
                   <div v-show="history.length>0"><v-btn @click='lzyplayHistory=[],$emit("lzyglobalSettings","playHistory","lazySet",null)' text><span style="color:red;font-size:16px">清空记录</span><v-icon color="gray">mdi-delete</v-icon></v-btn></div>
                   <div v-show="history.length==0">无</div>
                 </v-card-text>
               </v-card>
+              <!-- 新番表 -->
               <v-card max-width="100%" class="mt-8 helloPanelItem">
                 <v-card-subtitle><p class="lzyHead">动漫新番表：</p></v-card-subtitle>
                 <v-card-text>
@@ -167,29 +174,71 @@
                   <div><span>MOON PHASE - アニメ予定表  ：</span><a target="_blank" href="http://m-p.sakura.ne.jp/">http://m-p.sakura.ne.jp/</a></div>
                 </v-card-text>
               </v-card>
-              <v-card max-width="100%" class="mt-8 helloPanelItem">
+              <!-- 食用小技巧 -->
+              <v-card max-width="100%" class="mt-8 pb-3 helloPanelItem">
                 <v-card-subtitle ><p class="lzyHead" :style="`border-color:${generateRandomColor()}`">食用小技巧：</p></v-card-subtitle>
                 <v-card-text style="max-height:300px;overflow-y:scroll" class="lzyalign-left">
-                  <div class="">搜索记录的产生仅当在播放页<b>点击动漫标题的方式</b>在当前页加载的成功搜索会产生记录（点击图片会在新标签页中打开详情）</div>
-                  <div>点击顶栏小电视图标会直接返回主页，而点击AnimeSearcher大字标题会在新窗口打开</div>
-                  <div style="margin-top:8px;border-left:3px gray solid;font-weight:bold;border-radius:5px;padding-left:5px;text-indent:0">播放器技巧：</div>
-                  <div>在网络切换后等故障情况视频加载停顿时可以点击<code>卡点重载</code>按钮</div>
-                  <div>播放页按<code>F</code>和<code>W</code>可以分别快速切换浏览器全屏和网页全屏</div>
-                  <div>弹幕源匹配错误后切换的手动选择会被优调到前面</div>
-                  <div time="2020-12-13">支持弹幕合并啦！可以按紫色的外挂额外弹幕按钮试试吧</div>
+                  <div class="">『搜索记录』<i>为什么没有搜索记录？</i>只有在搜索结果页<b>点击动漫标题的方式</b>会产生记录(在当前页加载的成功搜索),而点击图片会在新标签页中打开，此时不会留下搜索记录</div>
+                  <div>『页面跳转』点击顶栏小电视图标会直接返回主页，而点击AnimeSearcher大字标题会在新窗口打开</div>
+                  <div style="margin-top:16px;border-left:3px gray solid;font-weight:bold;border-radius:5px;padding-left:5px;text-indent:0">播放器使用小提示：</div>
+                  <div><code>卡点重载</code> 按钮：在网络故障或视频加载停顿时可以点击；重新搜索弹幕并选择弹幕库后点击可以触发自动匹配 </div>
+                  <div>播放页按 <code>F</code> 和 <code>W</code> 可以分别快速切换浏览器全屏和网页全屏</div>
+                  <div>手动选择的弹幕库会被调优到前面</div>
+                  <div time="2020-12-13">支持弹幕合并啦！可以按紫色的<code>外挂额外弹幕</code>按钮试试吧</div>
+                  <div>在 <kbd>宽屏模式</kbd> 和 <kbd>Full Mode</kbd> 下视频组件层中滚动鼠标可以调整音量</div>
+                  <div>新增播放快捷键: <code>[</code> 多P切换上一集; <code>]</code> 多P切换下一集</div>
                 </v-card-text>
               </v-card>
-              <v-card max-width="100%" class="mt-8 helloPanelItem">
+              <!-- 温馨提示 和其他说明 -->
+              <v-card max-width="100%" class="mt-8 pb-3 helloPanelItem">
                 <v-card-subtitle ><p class="lzyHead" :style="`border-color:${generateRandomColor()}`">温馨提示和一些其他说明：</p></v-card-subtitle>
                 <v-card-text style="max-height:300px;overflow-y:scroll" class="lzyalign-left">
-                  <div>关闭一些不常用的资源引擎可以加速搜索响应，但也会使获取的内容变少</div>
-                  <div>弹幕源或者资源引擎<b>至少保留一个</b>，否则搜索总为空哦</div>
-                  <div>视频观看历史采用网页数据保存，最多保存16个哦</div>
-                  <div>进入视频详情页会预加载弹幕库数据，过快点击播放视频可能导致弹幕库加载失败，请手动辅助选择</div>
-                  <div>视频观看的代理路线出错时会自动切换，暂时手动切换会卡住需要点击卡点重载</div>
-                  <div>资源引擎<code>eyunzhu、meijuxia</code>视频常有不雅水印，建议关闭</div>
-                  <div>弹幕源<code>bahamut</code>多为港澳台地区繁体弹幕，加载速度较慢，建议关闭</div>
-                  <div>Firefox中视频播放页快捷键<code>F</code>偶尔失效？这源于一个<a target="_blank" href="https://www.imooc.com/wenda/detail/604596">古老的bug</a>，暂无好办法修复，一般等待视频加载完点击事件触发后全屏可生效</div>
+                  <div><code>夜间模式</code>:点击左下角切换主题组件中的小齿轮可以快速切换，而[其他设置项]面板中的按钮需要刷新后才见效</div>
+                  <div>『引擎管理』关闭一些不常用的资源引擎可以加速搜索响应，但也会使获取的内容变少</div>
+                  <div>『引擎管理』弹幕源或者资源引擎<b>至少保留一个</b>，否则搜索总为空哦</div>
+                  <div>『代理路线』<s>视频观看的代理路线出错时会自动切换，暂时手动切换会卡住需要点击卡点重载</s> 目前删除了手动切换选项，播放错误时会自动应用代理路线</div>
+                  <div>『历史记录』视频观看历史采用本地数据保存，最多保存32个哦</div>
+                  <div>由于抓取数据的特殊性，<s><b>所有视频观看链接仅临时有效</b>，所以无法保存观看链接</s> 现已增强历史记录实现，观看链接可保存</div>
+                  <div><s>进入视频详情页会预加载弹幕库数据，过快点击播放视频可能导致弹幕库加载失败，请手动辅助选择</s></div>
+                  <div>资源引擎 <code>eyunzhu</code> 、 <code>meijuxia</code> 视频常有不雅水印，建议关闭</div>
+                  <div>弹幕源 <code>bahamut</code> 多为港澳台地区繁体弹幕，加载速度较慢，建议关闭</div>
+                  <div>Firefox中视频播放页快捷键 <code>F</code> 偶尔失效？这源于一个<a target="_blank" href="https://www.imooc.com/wenda/detail/604596">古老的bug</a>，<s>暂无妙招修复，一般等待视频加载完触发点击事件后全屏快捷键可生效</s> 已修复，没有聚焦视频时不会响应全屏快捷键，不过为此加入了沉浸状态下自动focus</div>
+                  <div>由于视频层和弹幕列表的构造造成的固定事件响应顺序，当开启 <kbd>弹幕列表</kbd> 面板时，无法滚动调整音量</div>
+                  <div>『用户体验改进计划』：使用的百度站长平台进行用户量检测，不会收集任何隐私数据。开启表示支持 让我们知道你在用~也能给我们继续维护的动力！</div>
+                </v-card-text>
+              </v-card>
+              <!-- 其他设置项 -->
+              <v-card max-width="100%" class="mt-8 helloPanelItem">
+                <v-card-subtitle>
+                  <p class="lzyHead" :style="`border-color:${getRandomColor}`">
+                    <span>其他设置项</span>
+                  </p>
+                </v-card-subtitle>
+                <v-card-text>
+                  <span class="fastSettings">
+                      <v-switch dense
+                        class="ma-0"
+                        color="rgb(255, 148, 85)"
+                        v-model="someSettings.immerse"
+                        label="沉浸模式"
+                        @click.stop="lzyLazySets('immerse',someSettings.immerse)"
+                      ></v-switch>
+                      <v-switch dense
+                        class="ma-0"
+                        color="rgb(34,224,13)"
+                        v-model="someSettings.darkMode"
+                        label="夜间模式"
+                        title="切换后刷新见效；建议点击左下角齿轮可以立即切换"
+                        @click.stop="lzyLazySets('darkMode',someSettings.darkMode)"
+                      ></v-switch>
+                      <v-switch dense
+                        class="ma-0"
+                        color="primary"
+                        v-model="someSettings.statistics"
+                        label="用户体验改进计划"
+                        @click.stop="lzyLazySets('statistics',someSettings.statistics)"
+                      ></v-switch>
+                  </span>
                 </v-card-text>
               </v-card>
             </div>
@@ -205,22 +254,33 @@ export default {
   name: "HelloWorld",
   props:['history'],
   data: () => ({
+    lodash:{
+      getTimeByFloat:function(currentTime){
+        currentTime = parseInt(currentTime);
+        let seconds = currentTime%60,
+            minutes = ~~(currentTime/60)%60,
+            hours = ~~(currentTime/3600);
+        return `${currentTime>3600 ? (hours<10?('0'+hours):hours) + ':' : ''}${minutes<10?('0'+minutes):minutes}:${seconds<10?('0'+seconds):seconds}`;
+      },
+    },
     currentPath: window.location.pathname,
     lzycarousel: [
-      {src:"http://cdn.u1.huluxia.com/g4/M00/3A/42/rBAAdl9XQM6ATTfPAAFrMzHyq3Q241.jpg",url:"元龙"},
+      {src:"https://ftp.bmp.ovh/imgs/2020/11/4f0a5fe8ca33a218.png",url:"全职高手"},
       {
-        src: "http://css.njhzmxx.com/down/1/401210600851437.jpg",
-        url: "从零开始"
+        src: "https://puui.qpic.cn/vcover_hz_pic/0/324olz7ilvo2j5f1596864093269/498",
+        url: "吞噬星空"
       },
       {
-        src: "http://css.njhzmxx.com/comic/image/j330785131874534.jpg",
-        url: "异世界"
+        src: "https://puui.qpic.cn/vcover_hz_pic/0/mzc00200fdthd811592992296818/498",
+        url: "魔道祖师"
       },
-      {src:'http://tu.166376.com:988/img/upload/vod/2020-09-17/202009171600327695.jpg',url:"姜子牙"},
+      {src:'https://s3.ax1x.com/2020/11/21/D3EqTU.jpg',url:"姜子牙"},
     ],
     searchVal:{},
     randomStr:['异世界','小'],
     lzyUpdateMsg:[
+      {title:'2021-01-12',lineOne:"发布v1.1.8版",lineTwo:"搜索结果异步显示；历史记录完整支持；修复部分问题；提升播放体验"},
+      {title:'2021-01-06',lineOne:"内测v1.1.0体验版",lineTwo:"宽屏模式和弹幕列表来袭，播放器控制大修改，观番体验巨增！"},
       {title:'2020-12-13',lineOne:"发布v1.0.0正式版",lineTwo:"视频观看体验大优化<br>更多特色期待未来的版本重构吧"},
       {title:'2020-10-25',lineOne:"发布v0.9.9正式版,增加主题切换、沉浸模式,新增弹幕源、TVlive、新番表,优化多处细节",lineTwo:''},
       {title:'2020-09-11',lineOne:"发布v0.9.8,新增资源引擎,增加本地搜索记录",lineTwo:''},
@@ -237,12 +297,12 @@ export default {
     lzyplayHistory:[],
     switchEngines:[],
     switchDanmaku:[],
-    randomColor:['lightgreen','lightblue','pink','#f44','wheat','rgb(255, 172, 122)'],
+    randomColor:['#adeecf','008891','#e8e9a1','#48426d','#ffc1b6','#ffcda3','#b088f9','#321f28','#a05344','#734046','#ffcbcb','#ff9a76','#ffeadb','lightblue','pink','#f44','wheat','rgb(255, 172, 122)','#ffc1b6',],
     switchCategorys:{  // 弹幕分类
-      movie:['meijuxia','eyunzhu'],
-      comic:['agefans','yhdm','bimibimi','zzfun','eyunzhu', 'bilibili'],
-      soupOpera:['meijuxia', 'tencent','youku'],
-      performance:['eyunzhu','meijuxia', 'bahamut'], // 最快的性能推荐（此选项放置建议关闭的拖慢性能和内容质量低下的引擎）
+      movie:['meijuxia','eyunzhu','k1080'],
+      comic:['agefans','yhdm','bimibimi','zzfun','eyunzhu', 'bilibili','nieta',],
+      soupOpera:['meijuxia', 'tencent','youku','k1080'],
+      performance:['eyunzhu','meijuxia', 'bahamut'], // 关闭低的性能推荐（此选项放置建议关闭的拖慢性能和内容质量低下的引擎）
     },
     showSwitchedCategorys:[
       {name:'动漫分类整合：',type:'comic',danmaku:{},engines:{}},
@@ -255,12 +315,18 @@ export default {
       movie: true,
       soupOpera: false,
       performance: false,
+    },
+    someSettings:{
+      statistics: true,
+      immerse: true,
+      darkMode: false,
     }
   }),
   methods:{
     search: async function() {
       const res = await this.$http.get("/search/" + this.randomStr[~~(Math.random()*1000)%this.randomStr.length])
         .catch(function(e) {
+          console.log(e);
         });
       if (typeof res == "undefined" || _.isEmpty(res.data)) {
         this.emit('message',"获取搜索结果为空", "info");
@@ -318,6 +384,9 @@ export default {
       this.$emit("lzyglobalSettings",readKey,"read",null,val => { rtValue = val });
       if(!!rtKey) return rtValue[rtKey];
       return rtValue;
+    },
+    lzyLazySets:function(key, value){
+      this.$emit("lzyglobalSettings",key,"lazySet",value);
     },
     postEnginesSetting:async function(name, id){
       const res =await this.$http.post('/settings/engine',{name:'api.engines.'+name,enable: this.switchEngines[id].value}).catch(function(e){console.log(e);});
@@ -405,6 +474,9 @@ export default {
     setTimeout(function(){
       _this.getEngines();
       _this.lzyplayHistory = JSON.parse(_this.lzyReadPlayerSets("playHistory")) || []; // load失败时保持自身类型不变（array），否则后面报错null无length属性
+      _this.someSettings.immerse = _this.lzyReadPlayerSets("immerse");
+      _this.someSettings.statistics = _this.lzyReadPlayerSets("statistics");
+      _this.someSettings.darkMode = _this.lzyReadPlayerSets("darkMode");
     },999);
   }
 };
@@ -439,7 +511,7 @@ export default {
   text-indent:0!important;
   border-radius: 5px;
 }
-.historyItem span{
+.historyItem > span{
   display:inline-block;font-size:18px;vertical-align:top;margin-left:5px;padding:0 4px;cursor:pointer;color:#ff4e4e;
 }
 .historyItem:hover{background: #fce2e7;}

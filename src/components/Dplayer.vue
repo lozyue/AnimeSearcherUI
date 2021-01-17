@@ -10,8 +10,6 @@
 </template>
 
 <script>
-// import VueDPlayer from "vue-dplayer";
-// import "vue-dplayer/dist/vue-dplayer.css";
 import VueDPlayer from './vue-dplayer-raw.vue';
 import logoImg from '@/assets/logo.jpg';
 
@@ -61,6 +59,8 @@ export default {
   }),
   methods: {
     play() {
+      console.log("play roll back");
+      console.log(this.video.quality);
     }
   },
   mounted() {
@@ -69,8 +69,11 @@ export default {
   watch:{
     mytestStr:function(newstr){console.log(newstr);},
     playersettings:function(set){
+      console.log("设置发生了改变！")
       
       const player = this.$refs.player.dp;
+      console.log(set);
+      console.log(player)
       }
   }
 };

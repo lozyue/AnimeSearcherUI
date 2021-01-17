@@ -1,7 +1,13 @@
 <template>
   <v-app :style="!lzyPublicSettingsStorage.theme?'':'background:transparent'">
-
-    <!-- app-bar的hover出现触发器 -->
+    <!-- <v-progress-linear
+      buffer-value="0"
+      :stream="loading"
+      :indeterminate="loading"
+      class="lzytop"
+      :style="'position:fixed;top:'+loading?'0':'-5px'"
+      color="rgb(33, 150, 243)"
+    ></v-progress-linear> -->
     <div @mouseenter="scrollBehavior.userFocus=true" style="position:fixed;top:0;height: 32px;margin-top: 0px;left: 0px;right: 0px;z-index:4;"></div>
     <transition name="fadeUp">
     <v-app-bar v-show="scrollBehavior.userFocus" class="dropIn" app color="pink" dark>
@@ -13,7 +19,7 @@
                 alt="Vuetify Logo"
                 class="shrink mr-2"
                 contain
-                src="./assets/logo.png"
+                src="./assets/images/logo.png"
                 transition="scale-transition"
                 width="40"
                 v-on="on,"
@@ -40,7 +46,7 @@
       </v-btn>
       <v-btn
         class="settingButton"
-        @click.stop="scrollBehavior.hasScrolled+=10,showSettings=!showSettings" 
+        @click.stop="lzycoreMsg.push('userFocus'),showSettings=!showSettings" 
         text
       >
         <v-badge v-show="pubInfo.needUpdate" bordered color="error" dot overlap>
@@ -98,25 +104,23 @@
       </v-btn>
     </v-app-bar>
     </transition>
-    <!-- main区域 -->
     <v-main :class="''+(!lzyPublicSettingsStorage.theme?'':lzyPublicSettingsStorage.theme)">
-      <!-- 消息条存储 -->
       <v-row class="lzyalert" align="center" justify="center">
         <v-col>
           <transition name="lzymsg">
-            <!-- 目前最多支持同时出现三个消息条，支持html，找不到更好的解决方案了 -->
-            <v-alert class="msgbar" v-if="showMsg['info']" @click="lzymessageCallback(showMsgCallback['info'])" dense border="left" :type="type['info']" v-html="msg['info']"></v-alert>
+            <v-alert class="msgbar" v-if="lzymsgBar.showMsg['info']" @click="lzymessageCallback(lzymsgBar.showMsgCallback['info'])" :type="lzymsgBar.type['info']" v-html="lzymsgBar.msg['info']"  dense border="left"></v-alert>
           </transition>
           <transition name="lzymsg">
-            <v-alert class="msgbar" v-if="showMsg['warning']" @click="lzymessageCallback(showMsgCallback['warning'])" dense border="left" :type="type['warning']" v-html="msg['warning']"></v-alert>
+            <v-alert class="msgbar" v-if="lzymsgBar.showMsg['success']" @click="lzymessageCallback(lzymsgBar.showMsgCallback['success'])" :type="lzymsgBar.type['success']" v-html="lzymsgBar.msg['success']"  dense border="left"></v-alert>
           </transition>
           <transition name="lzymsg">
-            <v-alert class="msgbar" v-if="showMsg['error']" @click="lzymessageCallback(showMsgCallback['error'])" dense border="left" :type="type['error']" v-html="msg['error']"></v-alert>
+            <v-alert class="msgbar" v-if="lzymsgBar.showMsg['warning']" @click="lzymessageCallback(lzymsgBar.showMsgCallback['warning'])" :type="lzymsgBar.type['warning']" v-html="lzymsgBar.msg['warning']"  dense border="left"></v-alert>
+          </transition>
+          <transition name="lzymsg">
+            <v-alert class="msgbar" v-if="lzymsgBar.showMsg['error']" @click="lzymessageCallback(lzymsgBar.showMsgCallback['error'])" :type="lzymsgBar.type['error']" v-html="lzymsgBar.msg['error']"  dense border="left"></v-alert>
           </transition>
         </v-col>
       </v-row>
-      
-      <!-- 搜索区域 -->
       <transition name="lzysearch">
         <v-row v-show="searchBox" no-gutters align="center" justify="center" class="mt-12">
           <v-col cols="3"></v-col>
@@ -168,12 +172,16 @@
           v-model="showUpdateSnackbar"
           timeout="-1"
           vertical
+          min-width="356px"
         >
           <p>
-            <span>{{!pubInfo.needUpdate ? "当前版本":"发现新版本"}}：<a target="_blank" :href="pubInfo.version.url">v{{pubInfo.version.tag}} </a><i>(点我传送Github)</i></span>
+            <span>{{!pubInfo.needUpdate ? "当前版本":"发现新版本"}}：<a target="_blank" :href="pubInfo.version.url">v{{pubInfo.version.tag}} <i>(点我传送Github)</i></a></span>
             <span style="float:right"><time><i>{{pubInfo.version.time.slice(0,10)}}</i></time></span>
           </p>
-          <div>简介：<span v-html="pubInfo.version.describe"></span></div>
+          <div style="display:flex;justify-content: space-between;">
+            <div style="white-space: nowrap;flex-shrink:0;">更新简介：</div>
+            <pre style="flex-shrink:1;lex-grow: 1;" v-html="pubInfo.version.describe"></pre>
+          </div>
           <div>下载{{!pubInfo.needUpdate?"链接":"更新"}}：<a href="https://zaxtyson.lanzous.com/b0f1ukafc" target="_blank">蓝奏云下载windows安装包</a></div>
           <template v-slot:action="{ attrs }">
               <v-btn
@@ -187,23 +195,35 @@
           </template>
         </v-snackbar>
       </div>
-
-      <!-- 主题切换 -->
       <transition>
       <div id="lzySettingPanel" v-show="scrollBehavior.userFocus" class="bounceInUp">
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <div class="gear"
-                :style="`opacity:${lzyPublicSettingsStorage.theme=='fantasy'?'0.6':'1'}`"
-                v-on="on,"
-                v-bind="attrs" 
-                @click="(!lzyPublicSettingsStorage.theme?lzyPublicSettingsStorage.theme='fantasy':lzyPublicSettingsStorage.theme=''),lzyControlSettings('theme','lazySet',lzyPublicSettingsStorage.theme) ">
-              <span>{{!lzyPublicSettingsStorage.theme?"Default":"Fantasy"}}|THEME</span>
-              <v-icon class="spin" color="rgb(46, 46, 46)">mdi-cog</v-icon>
-            </div>
-          </template>
-          <span>点击切换主题</span>
-        </v-tooltip>
+          <div class="gear"
+            :style="`opacity:${lzyPublicSettingsStorage.theme=='fantasy'?'0.7':'1'}`"
+            @click="lzyControlSettings('theme','lazySet',lzyPublicSettingsStorage.theme),lzysendMessage('userFocus')">
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <span
+                  v-on="on," v-bind="attrs" 
+                  @click="(!lzyPublicSettingsStorage.theme?lzyPublicSettingsStorage.theme='fantasy':lzyPublicSettingsStorage.theme='')">
+                  <span>{{!lzyPublicSettingsStorage.theme?"Default":"Fantasy"}}</span>
+                  <span style="color:#ff9800">|</span>
+                  <span :style="`color:${!!$vuetify.theme.dark?'#fff':'black'};`">THEME</span>
+                </span>
+              </template>
+              <span>点击切换主题</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon 
+                @click="$vuetify.theme.dark = !$vuetify.theme.dark"
+                v-on="on," v-bind="attrs" 
+                class="spin" color="rgb(46, 46, 46)">
+                  mdi-cog
+                </v-icon>
+              </template>
+              <span>巴拉拉黑暗魔法</span>
+            </v-tooltip>
+          </div>
       </div>
       </transition>
       <transition>
@@ -227,18 +247,22 @@ export default {
 
   data: () => ({
     lzyPublicSettingsStorage:{
-      theme:'',
-      immerse: true,
-      matchDanmaku: 2,
-      matchDeadline: 65,
-      matchSelectedBySequence: false,
+      themeCabinet: ['default','fantasy'], // 所有主题选项，默认只能是第一个主题和第二个主题快速切换，子页面上会直接应用到根元素，主页其他全局元素需要单独设置样式
+      theme: 'default', // 当前主题 主题切换
+      darkMode: false, // 夜间模式的存储控制属性
+
+      immerse: true, // 沉浸模式
+      statistics: true, // 用户体验计划开关
+      matchDanmaku: 2, // 第一次失败后再最多尝试的次数
+      matchDeadline: 65, // 最低匹配率百分比。字符相似匹配 匹配成功的最低要求。
+      matchSelectedBySequence: false, // 开启此项后手动选择弹幕的episode集序号会记录下来，下一集就自动应用下一个而不做匹配。针对弹幕集标题和视频集标题完全不匹配的情况 // 未考虑倒序？？？
     },
     pubInfo:{
       version:{
-        tag:'1.0.0',
-        url:'https://github.com/zaxtyson/AnimeSearcher/releases',
-        describe:'v1.0.0版发布，视频观看体验大优化！更多特色期待未来版本重构吧',
-        time:'2020-12-14',
+        tag:'1.1.8-fixed',
+        url:'https://github.com/zaxtyson/AnimeSearcher/releases', // 默认使用总release更新
+        describe:'修复搜索请求发送重复问题，增加夜间模式供全局切换',
+        time:'2020-01-16',
       },
       needUpdate:false,
       
@@ -247,14 +271,15 @@ export default {
       offsetTop:0,
       direction:'none',
       same:0,
-      hasScrolled:240,
+      hasScrolled:240, // 初始维持一分钟
       userFocus:true,
     },
     lzycoreMsg:[],
+    lzyadditionImmerseAction:[],
     coreIntervalHandle:0,
     tempData:{scrollAnimationID:""},
 
-    showUpdateSnackbar:false,
+    showUpdateSnackbar:false, // 消息条显示
     searchBox: true,
     searching: false,
     loading: true,
@@ -263,12 +288,15 @@ export default {
     searchVal: [],
     showHistory: false,
     searchHistory:[],
-    msg: {'info':'','warning':'','error':''},
-    showMsg: {'info':false,'warning':false,'error':false},
-    showMsgCallback: {'info':null,'warning':null,'error':null},
-    type: {'info':'info','':'warning','error':'error'},
-    snackMsgQueue: [ [], [], [] ],
-    barCounts: 2,
+
+    lzymsgBar:{
+      msg: {info:'',success:'',warning:'',error:''}, // 消息内容存储
+      showMsg: {info:false,success:false,warning:false,error:false}, // 控制消息条显示
+      showMsgCallback: {info:[],success:[],warning:[],error:[]}, // 消息的事件响应函数(时间类型见定义)，暂时只支持一个函数
+      type: {info:'info',success:'success',warning:'warning',error:'error'}, // 消息条类型,可选值：error warning success info
+      snackMsgQueue: [ [], [], [], [] ], // 消息条计时器句柄分轨道记录
+    },
+    
     currentPath: window.location.pathname,
     showSettings:false,
     switchEngines:{
@@ -285,30 +313,64 @@ export default {
     lzyupdateComponent:Math.random().toString(16).slice(-4)
   }),
   methods: {
+    /**
+     * 发起搜索的函数
+     * 跳转路由到页面`/result`后 子组件会自动触发该方法
+     */
     onSearch: function(str=null, newTable='') {
-      if(str===null || !str){
-        if(newTable==='new') return window.open( (this.currentPath.length===1?'/#':this.currentPath+'#')+'/result/'+this.searchStr);
-        this.search();
+
+      this.searchStr =  str!==null ? str : !!this.searchStr ? this.searchStr : '异世界'; // 处理默认搜索词
+      if (this.$route.path.indexOf("/result") === -1){
+        if(newTable==='new'){
+          window.open( (this.currentPath.length===1?'/#':this.currentPath+'#')+'/result/'+this.searchStr);
+          return true;
+        }
+        this.$router.push("/result/"+ this.searchStr );
+        return false;
       }
-      else{
-        this.searchStr = str;
-        if(newTable==='new') return window.open( (this.currentPath.length===1?'/#':this.currentPath+'#')+'/result/'+this.searchStr);
-        this.search(str);
-      }
-      if (this.$route.path.indexOf("/result") === -1)
-        this.$router.push("/result/"+(str!==null?str:this.searchStr) );
-      this.searching = Math.random()+1;
-      this.showSettings=false;
+      if(newTable==='new'){
+        window.open( (this.currentPath.length===1?'/#':this.currentPath+'#')+'/result/'+this.searchStr);
+        return true;
+      }// 发起搜索
+      this.socket_search(this.searchStr);
+
+      this.searching = Math.random()+1; // 更新或传递 搜索状态
+      this.showSettings=false; // 关闭设置面板，如果打开了的话
+      return true;
     },
-    search: async function(str=null) {
+    socket_search: function(str){
+      const _this=this;
+      
+      _this.searchVal = [];
+      try{
+        var ws = new WebSocket(this.$baseSocket+"search");
+        ws.onopen = function (evt) {
+            ws.send(str);
+        };
+        ws.onmessage = function (evt) {
+            _this.searchVal.push( JSON.parse(evt.data) );
+            if(_this.$route.path.indexOf("/result/")===-1) _this.searchBox = false;
+            _this.scrollBehavior.hasScrolled+=120;
+            
+            ws.send("ok");
+        };
+        ws.onclose = function (evt) {
+            
+            _this.searching = false; // 传递更新完成的状态
+        };
+      }catch(e){
+      }
+      
+    },
+    search: async function(str) {
       const _this=this;
       const res = await this.$http
-        .get("/search/" + (str!==null?str:this.searchStr) )
+        .get("/search/" + (str) )
         .catch(function(e) {
           _this.lzymessage("获取搜素结果失败", "error");
           _this.searchVal = [];
         });
-      if (typeof (res.data) == "undefined" || _.isEmpty(res.data)) {
+      if (!res || _.isEmpty(res.data)) {
         this.lzymessage("获取搜索结果为空", "info");
         this.searchVal = [];
         return false;
@@ -317,29 +379,46 @@ export default {
       if(this.$route.path.indexOf("/result/")===-1) this.searchBox = false;
       this.scrollBehavior.hasScrolled+=120;
     },
+    /**
+     * 消息条显示函数
+     * @param str {需要显示的消息文字}
+     * @param type {消息条样式类型,支持`info`,`succese`,`warning`,`error`,`info`}
+     * @param id {要显示消息条的轨道id，为提高复用性而设定。轨道最多支持4条(id=0,1,2,3)。应该按事件触发频率进行不同轨道分发}
+     * @param duration {消息条显示的持续时间，单位毫秒；@if 设置为0，则默认永久，并在点击事件触发时隐藏消息条}
+     * @param onClick 第四个参数加入回调函数，可自定义点击事件触发时的动作
+     * */ 
     lzymessage: function(str, type = "success", id=0, duration=3999, onClick=function(){}) {
-      if(id>2){console.log("暂最多同时只支持三个消息条"); return false;}
+      if(id>3){console.warn("暂最多同时只支持四个消息条"); return false;}
       var _this = this;
-      var msgControl = id===0?'info':id===1?'warning':id===2?'error':'info';
-      this.msg[msgControl] = str;
-      this.type[msgControl] = type;
-      this.showMsg[msgControl] = true;
-      this.showMsgCallback[msgControl] = onClick;
-      this.snackMsgQueue[id].forEach(function(handle) {
+      var msgControl = id===0?'info':id===1?'success':id==2?'warning':id===3?'error':'info';
+      this.lzymsgBar.msg[msgControl] = str;
+      this.lzymsgBar.type[msgControl] = type;
+      this.lzymsgBar.showMsg[msgControl] = true;
+      this.lzymsgBar.showMsgCallback[msgControl].push(onClick);
+      this.lzymsgBar.snackMsgQueue[id].forEach(function(handle) {
         clearTimeout(handle);
       });
-      this.snackMsgQueue[id].push(
-        setTimeout(function() {
-          _this.showMsg[msgControl] = false;
-          _this.showMsgCallback[msgControl] = null;
-        }, duration)
-      );
+      if(duration>0){
+        this.lzymsgBar.snackMsgQueue[id].push(
+          setTimeout(function() {
+            _this.lzymsgBar.showMsg[msgControl] = false;
+            _this.lzymsgBar.showMsgCallback[msgControl] = []; // 清空数组
+          }, duration)
+        );
+      }else{
+        this.lzymsgBar.showMsgCallback[msgControl].push(function(){
+          _this.lzymsgBar.showMsg[msgControl] = false;
+          _this.lzymsgBar.showMsgCallback[msgControl] = []; // 清空数组
+        });
+      }
       return true;
     },
-    lzymessageCallback(callback){
+    lzymessageCallback(callbackQueue){
       var _self = this,
           _args = arguments;
-      if(!!callback) callback.apply(_self, _args);
+      callbackQueue.forEach(function(v,i){
+        v.apply(_self, _args);
+      })
     },
     lzyForceUpdate(){
       if(this.$route.path.indexOf('/index')===-1)
@@ -373,7 +452,7 @@ export default {
       const res =await this.$http.post('/settings/engine',{name:'api.engines.'+name,enable: this.switchEngines[id].value}).catch(function(e){console.log(e);});
       if(res.status==200) this.lzymessage("已经成功"+(this.switchEngines[id].value?'开启':'关闭')+"了引擎"+name,"success",1);
       else{
-        this.switchEngines[id].value=!this.switchEngines[id].value;
+        this.switchEngines[id].value=!this.switchEngines[id].value; // 撤销设置
         this.lzymessage("设置失败！已撤销设置","error",2);
       }
     },
@@ -381,7 +460,7 @@ export default {
       const res = await this.$http.post('/settings/danmaku',{name:'api.danmaku.'+name,enable: this.switchDanmaku[id].value}).catch(function(v){console.log(v)});
       if(res.status==200) this.lzymessage("成功"+(this.switchDanmaku[id].value?'开启':'关闭')+"了弹幕源"+name,"success",1);
       else{
-        this.switchDanmaku[id].value=!this.switchDanmaku[id].value;
+        this.switchDanmaku[id].value=!this.switchDanmaku[id].value; // 撤销设置
         this.lzymessage("设置失败！已撤销设置","error",2);
       }
     },
@@ -392,7 +471,7 @@ export default {
     },
     showAbout(){
       var _this=this;
-      _this.lzymessage('API服务：<span style="font-weight:600;color:#e97171">@Zaxtyson<span>','info',0,4399);
+      _this.lzymessage('API框架：<span style="font-weight:600;color:#e97171">@Zaxtyson<span>','info',0,4399);
       setTimeout(function(){_this.lzymessage('UI设计：<span style="font-weight:600;color:#e97171">  @Lozyue<span>','info',1,4699);},666);
       setTimeout(function(){_this.lzymessage('<a href="https://github.com/zaxtyson/AnimeSearcher" target="_blank">Github地址(点我)</a>','success',2,4999);},999);
       this.showUpdateSnackbar=true;
@@ -410,13 +489,14 @@ export default {
         if(weightSum(cloudMark) > weightSum(currentMark) ) checkFlag++;
         else if(weightSum(cloudMark) === weightSum(currentMark)){
           if(getInsertedNumbers(data.tag_name,false,true) > getInsertedNumbers(_this.pubInfo.version.tag,false,true)) checkFlag++;
-          if(cloudMark.length===currentMark.length) checkFlag--;
+          if(cloudMark.length===currentMark.length) checkFlag--; // 连续数字提取长度相等
           if(getInsertedNumbers(_this.pubInfo.version.tag,false).length===getInsertedNumbers(data.tag_name,false).length) checkFlag++;// 全部纯数字长度相等，两种情况相等时数字长度比较抵消
-          if(data.tag_name.length > _this.pubInfo.version.tag.length) checkFlag++;
+          if(data.tag_name.length > _this.pubInfo.version.tag.length) checkFlag++; // 这种在全是字符串后缀时比较可能偏差
           else if(data.tag_name.length < _this.pubInfo.version.tag.length) checkFlag--;
         }
         if(checkFlag < 0){
-          _this.pubInfo.version.describe=data.body;
+          _this.pubInfo.version.describe=data.body; // 仍然将说明更新为云端的显示
+          if(!!_this.pubInfo.needUpdate) return true; // 第二次检测更新正常返回
           return _this.lzymessage("当前已是最新版：v"+_this.pubInfo.version.tag,"success",1);
         }
         function weightSum(countStr){
@@ -428,7 +508,7 @@ export default {
         }
         function getInsertedNumbers(mixedStr, consistent=true, sum=false){
           var result;
-          mixedStr=mixedStr.replace(/\s/g,'');
+          mixedStr=mixedStr.replace(/\s/g,''); // 删除空格
           if(sum) result=0;
           else result='';
           for(let i=0;i<mixedStr.length;i++){
@@ -437,7 +517,7 @@ export default {
               continue;
             }
             if( !isNaN(mixedStr[i]) || mixedStr[i]==='·' || mixedStr[i]===".") result+=mixedStr[i];// 是 数字 . · 就加上去
-            else if(consistent) break;
+            else if(consistent) break; // 
           }
           return result;
         };
@@ -445,7 +525,7 @@ export default {
         _this.pubInfo.version = {
           tag:data.tag_name,
           url:data.html_url,
-          describe:data.body,
+          describe:(data.body), // .replace(/[\r\n]/g,'<br>)'
           time:data.created_at
         }
         _this.pubInfo.needUpdate = true;
@@ -462,7 +542,7 @@ export default {
             if( tempIndex!==-1 ){
               this.lzysetSearchHistory('delete');
             }
-            this.searchHistory.unshift(_.trim(this.searchStr) );
+            this.searchHistory.unshift(_.trim(this.searchStr) ); // 先搜索后添加
           }else{
           }
           break;
@@ -494,6 +574,11 @@ export default {
         }
       }
     },
+    /**
+     * 公共设置项存储控制API, 同步保存到localStorage; save load等操作可随便传入`key`
+     * 使用`lazySet`模式可以5s内节流异步保存
+     * @param callback 回调函数，跨组件读取存储数据需用其穿透定义域‘获取’返回值($emit不能获取返回值)
+     **/
     lzyControlSettings(key, method="read", value=null, callback=function(v){return v}){
       let rtValue=null;
       switch (method) {
@@ -506,15 +591,15 @@ export default {
           window.localStorage.setItem("lzysettings", JSON.stringify(this.lzyPublicSettingsStorage));
           break;
         case 'delete':
-          this.lzyPublicSettingsStorage[key] = value;
+          this.lzyPublicSettingsStorage[key] = undefined; // 虽然不会立即删除，但是在JSON.stringify后再重新parse后会清除
           window.localStorage.setItem("lzysettings", JSON.stringify(this.lzyPublicSettingsStorage));
           break;
         case 'save':
           window.localStorage.setItem("lzysettings", JSON.stringify(this.lzyPublicSettingsStorage));
           break;
         case 'load':
-          let temp;
-          if( (temp = JSON.parse(window.localStorage.getItem("lzysettings")) )&& !_.isEmpty(temp) )
+          let temp = JSON.parse(window.localStorage.getItem("lzysettings"));
+          if( temp && !_.isEmpty(temp) )
             Object.assign(this.lzyPublicSettingsStorage,temp);
           else console.error("设置项读取失败！");
           break;
@@ -529,7 +614,7 @@ export default {
           break;
       }
       callback(rtValue);
-      return true;
+      return rtValue;
     },
     onScroll:function(){
       var _this = this;
@@ -545,23 +630,56 @@ export default {
         if(_this.scrollBehavior.offsetTop < offset) _this.scrollBehavior.direction='down';
         else _this.scrollBehavior.direction='up';
         if('down' === _this.scrollBehavior.direction) _this.scrollBehavior.same>20?_this.scrollBehavior.same++:_this.scrollBehavior.same+=2;
-        else if(_this.scrollBehavior.same >= 3) _this.scrollBehavior.same-=3,_this.scrollBehavior.userFocus = true;;
+        else if(_this.scrollBehavior.same >= 3) _this.scrollBehavior.same-=3,_this.scrollBehavior.userFocus = true;; // 三倍递减
         if(_this.scrollBehavior.same>36){
-          _this.scrollBehavior.hasScrolled++;
+          _this.scrollBehavior.hasScrolled++; // 额外增加
           _this.scrollBehavior.userFocus = true;
         }
         _this.scrollBehavior.offsetTop = offset;
       });
     },
-    lzysendMessage:function(str){
-      this.lzycoreMsg.push(str);
+    /**
+     * 增加到消息队列的方法
+     * 支持`lzycoreActions`的 case 中的所有动作：checkUpdate userFocus等
+     * 第二个参数为钩子函数体，后面的参数为调用钩子传递的变量
+     */
+    lzysendMessage:function(str, msgHook=function(){},...argum){
+      switch(str){
+        case 'immerseAction':{
+          argum.unshift(msgHook);
+          this.lzyadditionImmerseAction.push(argum); // arguments就是一个数组，直接传递过去即可
+          break;
+        }
+        case 'immerseActionRemove':{
+          this.lzyadditionImmerseAction = [];
+          break;
+        }
+        default:
+          this.lzycoreMsg.push(str);
+      }
     },
     lzycoreActions:async function(){
-      var _this=this,
-          did_settingUpdate = false,
-          did_lazySettingsSave = false ;
-      for(let i=0;i<this.lzycoreMsg.length;i++){
-        switch(this.lzycoreMsg.shift()){
+      var _this=this;
+      const DEADLINE = 23, // 沉浸状态分割指标
+            END = 0; // 最低值
+      var lzyEventsRecorder={
+        did_queue: {},
+        recordEvents: function (currentMsg){
+          this.did_queue[currentMsg] = this.did_queue[currentMsg]>=0 ? ++this.did_queue[currentMsg] : 0;
+        },
+        isHappened: function (msg){
+          return !!this.did_queue[msg];
+        },
+        debounce: function (msg,callback=function(){}){
+          if(!this.isHappened(msg)) _this.lzycoreMsg.push(msg);
+          return callback.apply(_this,arguments);
+        }
+      }
+      let exeTime = this.lzycoreMsg.length;
+      for(let i=0;i<exeTime;i++){
+        let currentMsg = this.lzycoreMsg.shift();
+        lzyEventsRecorder.recordEvents(currentMsg);
+        switch(currentMsg){
           case 'checkUpdate':
             this.checkUpdate();
             break;
@@ -572,32 +690,64 @@ export default {
             this.scrollBehavior.hasScrolled>99?this.scrollBehavior.hasScrolled-=~~(this.scrollBehavior.hasScrolled/5*3):this.scrollBehavior.hasScrolled>23?this.scrollBehavior.hasScrolled=24:this.scrollBehavior.hasScrolled=0;
             break;
           case 'lazySettingsSave':
-            if(!did_lazySettingsSave){
+            if(!lzyEventsRecorder.isHappened('lazySettingsSave')){
               this.lzyControlSettings("lzysettings","save");
-              did_lazySettingsSave=true;
             };
             break;
-          case 'settingUpdate':
-            if(!did_settingUpdate){
-              this.getEngines(true);
-              did_settingUpdate=true;
+          case 'settingUpdate': // 一轮仅触发一次
+            if(!lzyEventsRecorder.isHappened('settingUpdate')){
+              this.getEngines(true); // 更新弹幕设置
             }
+            break;
+          case 'clearMsgError':
+            this.lzymsgBar.snackMsgQueue[3].forEach(function(handle) {
+              clearTimeout(handle);
+            });
+            _this.lzymsgBar.showMsg['error'] = false;
+            _this.lzymsgBar.showMsgCallback['error'] = []; // 清空方法区数组
+            break;
+          case 'clearMsgAll':
+            this.lzymsgBar.snackMsgQueue.forEach(function(tunnel,id){
+              tunnel.forEach(function(handle){
+                clearTimeout(handle);
+              })
+              let msgControl = id===0?'info':id===1?'success':id==2?'warning':id===3?'error':'info';
+              _this.lzymsgBar.showMsg[msgControl] = false;
+              _this.lzymsgBar.showMsgCallback[msgControl] = []; // 清空方法区数组
+            })
             break;
           default :
             break;
         }
       }
-      var immerseMode=function(){
-        if(_this.scrollBehavior.hasScrolled>23) _this.scrollBehavior.userFocus=true,_this.scrollBehavior.hasScrolled -= ~~(_this.scrollBehavior.hasScrolled/2 - Math.log(_this.scrollBehavior.hasScrolled+1));
+      var immerseAction=function(onImmerse = ()=>{}){
+        if(_this.scrollBehavior.hasScrolled > DEADLINE) _this.scrollBehavior.userFocus=true,_this.scrollBehavior.hasScrolled -= ~~(_this.scrollBehavior.hasScrolled/2 - Math.log(_this.scrollBehavior.hasScrolled+1));
         else _this.scrollBehavior.userFocus=false,_this.showSettings=false;
         
-        if(_this.scrollBehavior.hasScrolled>0) _this.scrollBehavior.hasScrolled--;
+        if(_this.scrollBehavior.hasScrolled > END) _this.scrollBehavior.hasScrolled--;
         else{
           _this.showUpdateSnackbar = false;
-          _this.searchBox = false;
+          _this.searchBox = false; // 沉浸模式自动隐藏搜索框
+          onImmerse.apply(_this,arguments);
         };
       };
-      if(this.lzyPublicSettingsStorage.immerse) immerseMode();
+
+      if(this.lzyPublicSettingsStorage.immerse){
+        immerseAction(()=>{
+          var _self = this;
+          this.lzyadditionImmerseAction.forEach(function(v,i){
+            var hookFunction = v.shift(); // 数组v中，第一个数据传入函数体，后面的为参数
+            hookFunction.apply(_self, v);
+            v.unshift(hookFunction); // 否则需要深拷贝
+          });
+        });
+      }
+    },
+    themeFastToggle(){
+      this.theme = this.theme === themeCabinet[0]?themeCabinet[1]:'default';
+      let temp = themeCabinet[0];
+      themeCabinet[1] = themeCabinet[0];
+      themeCabinet[0] = temp;
     }
   },
   computed:{
@@ -622,6 +772,8 @@ export default {
     var _this=this;
     try {
       this.lzyControlSettings("lzysettings","load");
+      this.$vuetify.theme.dark = !!this.lzyPublicSettingsStorage.darkMode; // Dom加载前提前读取dark模式，防止干扰渲染重排
+      
       this.lzysetSearchHistory('read');
       this.getEngines();
     } catch (error) {
@@ -632,10 +784,19 @@ export default {
     var _this=this;
     this.loading=false;
     window.addEventListener("scroll",this.onScroll);
+    if(process.env.NODE_ENV === 'production' && this.lzyControlSettings("statistics")){
+      var statistics = function() {
+        var hm = document.createElement("script");
+        hm.src = `http://127.0.0.1:6001/statistics/hm.js?st=cba&u=${window.document.URL}&ft=aac`;
+        var s = document.getElementsByTagName("script")[0]; 
+        s.parentNode.insertBefore(hm, s);
+      };
+      statistics();
+    }
     
     setTimeout(function(){
       _this.checkUpdate();
-    },10*60*1000);
+    },8*60*1000);
     this.coreIntervalHandle = setInterval(this.lzycoreActions, 5*1024);
   },
   destroyed(){
@@ -648,7 +809,7 @@ export default {
 .lzytop{z-index: 99999;}
 .lzyalert {
   position: fixed;
-  top: 30px;
+  top: 78px;
   left: 30px;margin-top: 24px;
   z-index: 9999;
 }
@@ -727,7 +888,7 @@ export default {
   bottom: 56px;right: 56px;
   height: 99px;
   width: 46px;
-  background: transparent url('./assets/toTop.png') no-repeat scroll center center / cover;
+  background: transparent url('./assets/images/toTop.png') no-repeat scroll center center / cover;
   /* animation-delay: .3s; */
   z-index: 999;
 }
@@ -833,6 +994,12 @@ a div .v-image__image--preload{
 }
 /* .spin{animation: lzySpin 8s linear 3s;} */
 .spin{animation: lzySpin 8s infinite linear 3s;}
+.spin:hover{
+  animation-duration: 1s;
+  animation-direction: reverse;
+  animation-timing-function: ease-in-out;
+  /* animation-iteration-count: 2; */
+}
 /* lzyAnimation */
 @keyframes lzySpin{
 	100%{transform:rotate(360deg);}

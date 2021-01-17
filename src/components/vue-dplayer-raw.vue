@@ -115,6 +115,12 @@ export default {
     player.on("error", (emsg) => {
       this.$emit("error",emsg);
     });
+    player.on("onpress_[", (is_previous) => {
+      this.$emit("lzyplay_hotkeyToggle",is_previous);
+    });
+    player.on("onpress_]", (is_previous) => {
+      this.$emit("lzyplay_hotkeyToggle",is_previous);
+    });
   },
   beforeDestroy(){
     this.$emit("beforeDestroy",false,this.dp.video.currentTime);

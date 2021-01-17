@@ -5,6 +5,7 @@ import vuetify from './plugins/vuetify'
 
 import axios from 'axios'
 import Hls from 'hls.js'
+import './assets/styles/global.css'
 
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
@@ -16,6 +17,7 @@ NProgress.configure({
 window.Hls = Hls;
 var mypath = window.location.pathname;
 axios.defaults.baseURL = 'http://127.0.0.1:6001/';
+Vue.prototype.$baseSocket = 'ws://127.0.0.1:6002/';
 
 axios.interceptors.request.use(function (lzyConfigs){
     if(lzyConfigs.method==='get'){lzyConfigs.data=true;}
@@ -55,12 +57,3 @@ new Vue({
   vuetify,
   render: h => h(App)
 }).$mount('#app')
-if(process.env.NODE_ENV === 'production'){
-  var _hmt = _hmt || [];
-  (function() {
-    var hm = document.createElement("script");
-    hm.src = "https://hm.baidu.com/hm.js?4dd6abb02768922a2223178a088d5fde";
-    var s = document.getElementsByTagName("script")[0]; 
-    s.parentNode.insertBefore(hm, s);
-  })();
-}
