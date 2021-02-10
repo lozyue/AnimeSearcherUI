@@ -1,6 +1,6 @@
 {
   "name": "AnimeSearcher",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -23,7 +23,7 @@
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-eslint": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
-    "@vue/cli-service": "~4.3.0",
+    "@vue/cli-service": "^4.3.1",
     "@vue/eslint-config-standard": "^5.1.2",
     "babel-plugin-component": "^1.1.1",
     "babel-plugin-transform-remove-console": "^6.9.4",

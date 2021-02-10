@@ -10,7 +10,7 @@
           </h1>
         </v-row>
         <v-row class="lzytransparent">
-          <v-col cols="3">
+          <v-col v-if="!$magic.isMobile()&&!$magic.isFlatPC()" cols="3">
             <v-timeline dense class="lightbule--text" style="user-select:none">
               <v-timeline-item
                 icon-color="#fff"
@@ -21,13 +21,6 @@
                   class="mx-auto"
                   max-width="360"
                 >
-                  <!-- <v-img
-                    class="white--text align-end"
-                    max-width="300px"
-                    src="https://img.xjh.me/random_img.php?return=302&type=bg&ctype=acg"
-                    https://5200.pro/wp-content/uploads/2020/02/IMG_151.jpg
-                    https://5200.pro/wp-content/uploads/2020/03/79690646_p0-副本.jpg
-                  > -->
                   <v-img
                     class="white--text align-end"
                     max-width="300px"
@@ -69,21 +62,23 @@
               </v-timeline-item>
             </v-timeline>
           </v-col>
-          <v-col cols="3">
+          <!-- 新番表，本周 -->
+          <v-col v-if="!$magic.isMobile()" cols="3">
             <div>
               <span title="上一周" @click="bangumi.current>0?bangumi.current--:bangumi" style="float:left;cursor:pointer;"><v-icon :color="bangumi.current>0?'rgb(255, 82, 82)':'lightgray'">mdi-skip-previous</v-icon></span>
               <span style="font-weight:500;color:#de4077">新番表</span>
               <span title="下一周" @click="bangumi.current<bangumi.total.length-1?bangumi.current++:bangumi" style="float:right;cursor:pointer;"><v-icon :color="bangumi.current<bangumi.total.length-1?'rgb(255, 82, 82)':'lightgray'">mdi-skip-next</v-icon></span>
             </div>
-                <v-card @click="$router.push('/result/'+data.title.trim().replaceAll('/',' '))" class="bangumi pb-4" v-for="(data,index) in bangumi.total[bangumi.current].updates" :key="index">
-                  <v-img :src="data.cover" max-width="300px" class="mx-auto mt-2"></v-img>
+                <v-card @click="$router.push('/result/'+data.title.trim().replace(/[^\u4e00-\u9fa50-9a-zA-Z\-_]/g,' '))" class="bangumi pb-4" v-for="(data,index) in bangumi.total[bangumi.current].updates" :key="index">
+                  <v-img :src="data.cover_url" max-width="300px" class="mx-auto mt-2"></v-img>
                   <v-card-subtitle><span style="float:left;"><span>更新至:</span> {{data.update_to}}</span><span style="float:right;"><time>{{bangumi.today===bangumi.current?data.update_time.slice(10):data.update_time.slice(0,10)}}</time></span></v-card-subtitle>
                   <div class="" style="clear:both;font-size:14px">{{data.title}} </div>
                 </v-card>
           </v-col>
-          <v-col cols="6">
+          <!-- 右侧内容 -->
+          <v-col lg="6" md="9" sm="12">
             <!-- 走马灯 -->
-            <v-carousel cycle interval="5000" class="mt-6 lzycarousel" hide-delimiters touchless height="286" width="360">
+            <v-carousel cycle interval="5000" class="mt-6 lzycarousel" hide-delimiters touchless :height="$magic.isMobile()?175:286" width="360">
               <a
                 v-for="(item,i) in lzycarousel"
                 :key="i"
@@ -95,16 +90,18 @@
             <!-- 快捷资源分类 -->
             <v-spacer></v-spacer>
             <div class="helloPanel">
+              <!-- 搜索历史展示 -->
               <v-card max-width="100%" class="helloPanelItem mb-8">
-                <v-card-subtitle><p class="lzyHead">近期搜索：</p></v-card-subtitle>
+                <v-card-subtitle><p class="lzyHead">近期搜索：<v-icon>mdi-history</v-icon></p></v-card-subtitle>
                 <v-card-text>
-                  <div class="lzyalign-left mb-2 historyItem" v-for="(data,i) in history" :key="i">
-                    <a @click="$emit('search',data)">{{data}}</a><span title="删除" @click="$emit('setSearchHistory','delete',data),$emit('setSearchHistory','storage')" >✖</span>
-                  </div>
-                  <div v-show="history.length>0"><v-btn @click="$emit('setSearchHistory','clear')" text><span style="color:red;font-size:16px">清空记录</span><v-icon color="gray">mdi-delete</v-icon></v-btn></div>
-                  <div v-show="history.length==0">无</div>
+                  <!-- 搜索历史控制组件封装 emit 事件传递给爷组件-->
+                  <search-history
+                    @dialog="(param)=>{$emit('dialog',param)}"
+                    @notice="(...param)=>{param.unshift('message');$emit.apply(this, param)}"
+                  ></search-history>
                 </v-card-text>
               </v-card>
+              <!-- 快捷弹幕引擎开关分类 -->
               <v-card max-width="100%" class="helloPanelItem">
                   <v-expansion-panels :value="0">
                     <v-expansion-panel
@@ -114,14 +111,10 @@
                       <v-expansion-panel-header>
                         <p class="lzyHead" :style="`border-color:${getRandomColor}`">
                           <span>{{item.name}}</span>
-                          <!-- <span style="float:right">
-                              <v-switch @click="categoryControls[item.type]=!categoryControls[item.type]"></v-switch>
-                              <span>一键开关</span>
-                          </span> -->
                         </p>
                       </v-expansion-panel-header>
                       <v-expansion-panel-content>
-                        <span class="fastSettings" v-for="(data,i) in item.engines" :key="i">
+                        <span class="fastSettings" v-for="(data,i) in item.engines" :key="index.toString()+i.toString()">
                           <v-switch dense
                             class="ma-0"
                             color="primary"
@@ -132,7 +125,7 @@
                           ></v-switch>
                         </span>
                         <v-divider></v-divider>
-                        <span class="fastSettings" v-for="(data,i) in item.danmaku" :key="-i">
+                        <span class="fastSettings" v-for="(data,i) in item.danmaku" :key="index.toString()+(-1 - i).toString()">
                           <v-switch dense
                             color="#eab4f8"
                             class="ma-0"
@@ -148,18 +141,13 @@
               </v-card>
               <!-- 观看历史展示 -->
               <v-card max-width="100%" class="helloPanelItem mt-8">
-                <v-card-subtitle><p class="lzyHead" style="border-color:#ff6e9f">近期观看：</p></v-card-subtitle>
+                <v-card-subtitle><p class="lzyHead" style="border-color:#ff6e9f">近期观看：<v-icon>mdi-history</v-icon></p></v-card-subtitle>
                 <v-card-text>
-                  <div class="lzyalign-left mb-2 historyItem" v-for="(data,i) in lzyplayHistory" :key="i">
-                    <a :title="data.engine+' '+data.date" @click="!data.url?$emit('search',data.name):$router.push(data.url)">
-                      『{{data.name}}』<b style="color:#eaf;">{{data.episode}}</b> <span style="color:pink">{{lodash.getTimeByFloat(data.currentTime)}}</span>
-                    </a>
-                    <span title="删除" @click='lzyplayHistory = lzyplayHistory.slice(0,i).concat(lzyplayHistory.slice(i+1,lzyplayHistory.length) ),$emit("lzyglobalSettings","playHistory","lazySet",JSON.stringify(lzyplayHistory))' >
-                      ✖
-                    </span>
-                  </div>
-                  <div v-show="history.length>0"><v-btn @click='lzyplayHistory=[],$emit("lzyglobalSettings","playHistory","lazySet",null)' text><span style="color:red;font-size:16px">清空记录</span><v-icon color="gray">mdi-delete</v-icon></v-btn></div>
-                  <div v-show="history.length==0">无</div>
+                  <!-- 观看历史控制组件封装 emit 事件传递给中央组件App-->
+                  <play-history 
+                    @dialog="(param)=>{$emit('dialog',param)}"
+                    @notice="(...param)=>{param.unshift('message');$emit.apply(this, param)}"
+                  ></play-history>
                 </v-card-text>
               </v-card>
               <!-- 新番表 -->
@@ -196,18 +184,18 @@
                   <div><code>夜间模式</code>:点击左下角切换主题组件中的小齿轮可以快速切换，而[其他设置项]面板中的按钮需要刷新后才见效</div>
                   <div>『引擎管理』关闭一些不常用的资源引擎可以加速搜索响应，但也会使获取的内容变少</div>
                   <div>『引擎管理』弹幕源或者资源引擎<b>至少保留一个</b>，否则搜索总为空哦</div>
-                  <div>『代理路线』<s>视频观看的代理路线出错时会自动切换，暂时手动切换会卡住需要点击卡点重载</s> 目前删除了手动切换选项，播放错误时会自动应用代理路线</div>
-                  <div>『历史记录』视频观看历史采用本地数据保存，最多保存32个哦</div>
-                  <div>由于抓取数据的特殊性，<s><b>所有视频观看链接仅临时有效</b>，所以无法保存观看链接</s> 现已增强历史记录实现，观看链接可保存</div>
-                  <div><s>进入视频详情页会预加载弹幕库数据，过快点击播放视频可能导致弹幕库加载失败，请手动辅助选择</s></div>
+                  <div>『代理路线』<s>视频观看的代理路线出错时会自动切换，暂时手动切换会卡住需要点击卡点重载</s> 目前删除了手动切换选项，播放错误时会自动切换代理路线</div>
+                  <div>『观看历史』视频观看历史采用本地数据保存，最多保存32个哦</div>
+                  <div>『历史记录』更新后历史记录丢失？历史记录采用的是浏览器数据保存，更新时安装位置不同也会导致不同历史副本从而丢失，此外清空浏览器存储数据和换不同浏览器打开都会导致历史丢失</div>
                   <div>资源引擎 <code>eyunzhu</code> 、 <code>meijuxia</code> 视频常有不雅水印，建议关闭</div>
                   <div>弹幕源 <code>bahamut</code> 多为港澳台地区繁体弹幕，加载速度较慢，建议关闭</div>
-                  <div>Firefox中视频播放页快捷键 <code>F</code> 偶尔失效？这源于一个<a target="_blank" href="https://www.imooc.com/wenda/detail/604596">古老的bug</a>，<s>暂无妙招修复，一般等待视频加载完触发点击事件后全屏快捷键可生效</s> 已修复，没有聚焦视频时不会响应全屏快捷键，不过为此加入了沉浸状态下自动focus</div>
                   <div>由于视频层和弹幕列表的构造造成的固定事件响应顺序，当开启 <kbd>弹幕列表</kbd> 面板时，无法滚动调整音量</div>
                   <div>『用户体验改进计划』：使用的百度站长平台进行用户量检测，不会收集任何隐私数据。开启表示支持 让我们知道你在用~也能给我们继续维护的动力！</div>
+                  <div>『恢复历史按钮』:不是恢复当前被删除的历史记录，是恢复之前版本产生的历史记录</div>
+                  <div> 本次更新由于部分核心重构的原因，历史数据与上次不互通。如果您的升级安装目录和之前一致且打开网页的浏览器相同，此段时间内又没有清理过浏览器存储数据的话，是可以通过历史记录卡片中提供的恢复历史按钮找回来的</div>
+                  <div>『留言反馈』:<a href="https://github.com/zaxtyson/AnimeSearcher/issues" target="_blank">Github Issue[推荐]</a><span>、  </span><a href="https://gitee.com/zaxtyson/AnimeSearcher/issues" target="_blank">Gitee Issue</a><span>、  </span><a href="https://www.bilibili.com/read/cv9758415" target="_blank">小破站评论区[备选]</a></div>
                 </v-card-text>
               </v-card>
-              <!-- 其他设置项 -->
               <v-card max-width="100%" class="mt-8 helloPanelItem">
                 <v-card-subtitle>
                   <p class="lzyHead" :style="`border-color:${getRandomColor}`">
@@ -216,29 +204,53 @@
                 </v-card-subtitle>
                 <v-card-text>
                   <span class="fastSettings">
-                      <v-switch dense
-                        class="ma-0"
-                        color="rgb(255, 148, 85)"
-                        v-model="someSettings.immerse"
-                        label="沉浸模式"
-                        @click.stop="lzyLazySets('immerse',someSettings.immerse)"
-                      ></v-switch>
-                      <v-switch dense
-                        class="ma-0"
-                        color="rgb(34,224,13)"
-                        v-model="someSettings.darkMode"
-                        label="夜间模式"
-                        title="切换后刷新见效；建议点击左下角齿轮可以立即切换"
-                        @click.stop="lzyLazySets('darkMode',someSettings.darkMode)"
-                      ></v-switch>
-                      <v-switch dense
-                        class="ma-0"
-                        color="primary"
-                        v-model="someSettings.statistics"
-                        label="用户体验改进计划"
-                        @click.stop="lzyLazySets('statistics',someSettings.statistics)"
-                      ></v-switch>
+                    <v-switch dense
+                      class="ma-0"
+                      color="rgb(255, 148, 85)"
+                      v-model="someSettings.immerse"
+                      label="沉浸模式"
+                      @click.stop="lzyLazySets('immerse',someSettings.immerse)"
+                    ></v-switch>
+                    <v-switch dense
+                      class="ma-0"
+                      color="rgb(34,224,13)"
+                      v-model="someSettings.darkMode"
+                      label="夜间模式"
+                      title="切换后刷新见效；建议点击左下角齿轮可以立即切换"
+                      @click.stop="lzyLazySets('darkMode',someSettings.darkMode)"
+                    ></v-switch>
+                    <v-switch dense
+                      class="ma-0"
+                      color="primary"
+                      v-model="someSettings.statistics"
+                      label="用户体验改进计划"
+                      @click.stop="lzyLazySets('statistics',someSettings.statistics)"
+                    ></v-switch>
                   </span>
+                    <div>
+                      <div>指定通信地址:</div>
+                      <v-text-field
+                        ref="server"
+                        v-model="someSettings.server"
+                        :rules="[
+                        () => !!someSettings.server || '留空则使用默认地址' ,
+                        () => /^http(?:s)?:\/\/(?:[^\W%]+?\.){1,3}[^\W%]+?(?:\:[0-9]{1,5})?\/?$/.test(someSettings.server) || '请输入完整的域名或服务器IP' ,
+                        ]"
+                        label="手动设置服务器地址"
+                        placeholder="请以http或https开头"
+                        counter="50"
+                        required
+                      ></v-text-field>
+                      <v-btn
+                        middle
+                        title="保存服务器地址设置"
+                        color="primary"
+                        @click="setServer"
+                      >
+                        <v-icon left>mdi-target</v-icon>
+                        Set
+                      </v-btn>                  
+                    </div>
                 </v-card-text>
               </v-card>
             </div>
@@ -250,19 +262,17 @@
 </template>
 
 <script>
+import lzysearchHistory from '../auxiliary/blocks/manager/search-history.vue';
+import lzyplayHistory from '../auxiliary/blocks/manager/play-history.vue'
+
 export default {
   name: "HelloWorld",
-  props:['history'],
+  inheritAttrs: false,
+  components:{
+    "search-history": lzysearchHistory,
+    "play-history": lzyplayHistory,
+  },
   data: () => ({
-    lodash:{
-      getTimeByFloat:function(currentTime){
-        currentTime = parseInt(currentTime);
-        let seconds = currentTime%60,
-            minutes = ~~(currentTime/60)%60,
-            hours = ~~(currentTime/3600);
-        return `${currentTime>3600 ? (hours<10?('0'+hours):hours) + ':' : ''}${minutes<10?('0'+minutes):minutes}:${seconds<10?('0'+seconds):seconds}`;
-      },
-    },
     currentPath: window.location.pathname,
     lzycarousel: [
       {src:"https://ftp.bmp.ovh/imgs/2020/11/4f0a5fe8ca33a218.png",url:"全职高手"},
@@ -279,7 +289,8 @@ export default {
     searchVal:{},
     randomStr:['异世界','小'],
     lzyUpdateMsg:[
-      {title:'2021-01-12',lineOne:"发布v1.1.8版",lineTwo:"搜索结果异步显示；历史记录完整支持；修复部分问题；提升播放体验"},
+      {title:'2021-02-10',lineOne:"发布v1.3.0正式版",lineTwo:"后端核心框架异步改造完成;前端播放器部分优化,即将进入UI重构"},
+      {title:'2021-01-12',lineOne:"发布v1.1.8抢鲜版",lineTwo:"搜索结果异步显示；历史记录完整支持；修复部分问题；提升播放体验"},
       {title:'2021-01-06',lineOne:"内测v1.1.0体验版",lineTwo:"宽屏模式和弹幕列表来袭，播放器控制大修改，观番体验巨增！"},
       {title:'2020-12-13',lineOne:"发布v1.0.0正式版",lineTwo:"视频观看体验大优化<br>更多特色期待未来的版本重构吧"},
       {title:'2020-10-25',lineOne:"发布v0.9.9正式版,增加主题切换、沉浸模式,新增弹幕源、TVlive、新番表,优化多处细节",lineTwo:''},
@@ -291,18 +302,17 @@ export default {
     ],
     bangumi:{
       current: 0,
-      today:0, // 本周的引索记录
-      total:[{date:'',day_of_week:'',is_today:true,updates:[]}], // 总共数据
+      today:0,
+      total:[{date:'',day_of_week:'',is_today:true,updates:[]}],
     },
-    lzyplayHistory:[],
     switchEngines:[],
     switchDanmaku:[],
     randomColor:['#adeecf','008891','#e8e9a1','#48426d','#ffc1b6','#ffcda3','#b088f9','#321f28','#a05344','#734046','#ffcbcb','#ff9a76','#ffeadb','lightblue','pink','#f44','wheat','rgb(255, 172, 122)','#ffc1b6',],
-    switchCategorys:{  // 弹幕分类
-      movie:['meijuxia','eyunzhu','k1080'],
-      comic:['agefans','yhdm','bimibimi','zzfun','eyunzhu', 'bilibili','nieta',],
-      soupOpera:['meijuxia', 'tencent','youku','k1080'],
-      performance:['eyunzhu','meijuxia', 'bahamut'], // 关闭低的性能推荐（此选项放置建议关闭的拖慢性能和内容质量低下的引擎）
+    switchCategorys:{
+      movie:['k1080','eyunzhu','meijuxia'],
+      comic:['yhdm','bimibimi','agefans','zzzfun', 'bilibili','tencent','nieta',],
+      soupOpera:['k1080','meijuxia', 'tencent','youku',],
+      performance:['eyunzhu','meijuxia', 'bahamut'],
     },
     showSwitchedCategorys:[
       {name:'动漫分类整合：',type:'comic',danmaku:{},engines:{}},
@@ -316,31 +326,34 @@ export default {
       soupOpera: false,
       performance: false,
     },
+    errorMessages:'替换个人默认服务器通信地址,用于服务器部署',
     someSettings:{
       statistics: true,
       immerse: true,
       darkMode: false,
-    }
+      server: 'http://127.0.0.1:6001/',
+    },
   }),
   methods:{
-    search: async function() {
-      const res = await this.$http.get("/search/" + this.randomStr[~~(Math.random()*1000)%this.randomStr.length])
-        .catch(function(e) {
-          console.log(e);
-        });
-      if (typeof res == "undefined" || _.isEmpty(res.data)) {
-        this.emit('message',"获取搜索结果为空", "info");
-        return false;
+    setServer: function(){
+      if(this.someSettings.server.length===0)
+        this.someSettings.server = this.$options.data().someSettings.server;
+      if(this.someSettings.server.charAt(this.someSettings.server.length - 1) !== '/'){
+        this.someSettings.server += '/';
       }
-      this.searchVal = res.data;
+      this.$http.defaults.baseURL = this.someSettings.server;
+      this.$http.defaults.$baseSocket = 'ws://' + this.someSettings.server.replace(/(http(:?s)*:\/\/)/,'');
+      this.$emit("lzyglobalSettings","server","set", this.someSettings.server);
+      this.$emit("lzyglobalSettings","server","save");
+      this.$emit("message","服务地址已保存,后续访问页面生效！","success",-1);
     },
     get_bangumi: async function(){
-      const {data:res} = await this.$http.get("/bangumi/timeline").catch(function(e){console.error(e)});
+      const {data:res} = await this.$http.get("anime/bangumi/updates").catch(function(e){console.error(e)});
       if(_.isEmpty(res)){
         this.$emit("message","新番表为空","warning",1);
         return false;
       }
-      var haveToday = false; 
+      var haveToday = false;
       for(let i=res.length-1;i>=0;i--){
         if(res[i].is_today!=true) continue;
         else{
@@ -356,23 +369,24 @@ export default {
     },
     getEngines:async function(){
       var _this = this;
-      this.$http.get('/settings').then(function(res){
-        if(typeof(res)==='undefined' || _.isEmpty(res.data) || !res.data.hasOwnProperty("engines") || !res.data.hasOwnProperty('danmaku') ) return _this.lzymessage("获取设置项失败,请确保服务端已运行!","error",2);
-        function transformObject(engines){
-          var  i=0, mark=-1, ObjectData={};
-          for(var k in engines){
-            mark = k.lastIndexOf('.');
-            if( mark !== -1){
-              ObjectData[i] = {name: k.substr(mark+1,k.length), value: engines[k]};
-            }else{
-              ObjectData[i] = {name:k,value:engines[k]}
-            }
-            i++;
+      this.$http.get('system/modules').then(function(res){
+        if(typeof(res)==='undefined' || _.isEmpty(res.data) || !res.data.hasOwnProperty("anime") || !res.data.hasOwnProperty('danmaku') ) return _this.$emit("message","获取设置项失败,请确保服务端已运行!","error",2);
+        
+        function transformObject(modules){
+          let i=0, mark = -1, result = {};
+          if(modules.length){
+            modules.forEach((item)=>{
+              result[i] = {
+                name: item.module.slice(item.module.lastIndexOf('.') - item.module.length + 1),
+                value: item.enable,  
+              };
+              i++;
+            });
           }
-          return ObjectData;
+          return result;
         }
         _this.switchDanmaku=transformObject(res.data.danmaku);
-        _this.switchEngines=transformObject(res.data.engines);
+        _this.switchEngines=transformObject(res.data.anime);
         _this.showSwitchedCategorys.forEach(function(v,index,arr){
           arr[index].engines = _this.getCategoriedSwitches('engines',v.type);
           arr[index].danmaku = _this.getCategoriedSwitches('danmaku',v.type);
@@ -389,17 +403,17 @@ export default {
       this.$emit("lzyglobalSettings",key,"lazySet",value);
     },
     postEnginesSetting:async function(name, id){
-      const res =await this.$http.post('/settings/engine',{name:'api.engines.'+name,enable: this.switchEngines[id].value}).catch(function(e){console.log(e);});
+      const res =await this.$http.post('/system/modules',[{module:'api.anime.'+name,enable: this.switchEngines[id].value}]).catch(function(e){console.log(e);});
       if(res.status!=200){
-        this.switchEngines[id].value=!this.switchEngines[id].value; // 撤销设置
+        this.switchEngines[id].value=!this.switchEngines[id].value;
         this.$emit("message","设置失败！已撤销设置","error",2);
         return false;
       }
     },
     postDanmakuSetting:async function(name,id){
-      const res = await this.$http.post('/settings/danmaku',{name:'api.danmaku.'+name,enable: this.switchDanmaku[id].value}).catch(function(v){console.log(v)});
+      const res = await this.$http.post('system/modules',[{module:'api.danmaku.'+name,enable: this.switchDanmaku[id].value}]).catch(function(v){console.log(v)});
       if(res.status!=200){
-        this.switchDanmaku[id].value=!this.switchDanmaku[id].value; // 撤销设置
+        this.switchDanmaku[id].value=!this.switchDanmaku[id].value;
         this.$emit("message","设置失败！已撤销设置","error",2);
       }
     },
@@ -408,7 +422,7 @@ export default {
       if(type === 'engines'){
         this.switchEngines[id].value = this.showSwitchedCategorys[index].engines[id].value;
         this.postEnginesSetting(name,id);
-      }else { // 弹幕库设置更新
+      }else {
         this.switchDanmaku[id].value = this.showSwitchedCategorys[index].danmaku[id].value;
         this.postDanmakuSetting(name,id);
       }
@@ -417,19 +431,27 @@ export default {
         arr[index].danmaku = _this.getCategoriedSwitches('danmaku',v.type);
       });
       
-      this.$emit("addAction","settingUpdate"); // 添加 更新设置项 队列消息
+      this.$emit("addAction","settingUpdate");
     },
     getCategoriedSwitches:function(postType, categoryName){
       var currentCategory = {};
       if(postType==='danmaku'){
         for(let index in this.switchDanmaku){
           if( _.indexOf(this.switchCategorys[categoryName], this.switchDanmaku[index].name)===-1) continue;
-          currentCategory[index] = {name:this.switchDanmaku[index].name,value:this.switchDanmaku[index].value,type:postType};
+          currentCategory[index] = {
+            name:this.switchDanmaku[index].name,
+            value:this.switchDanmaku[index].value,
+            type:postType
+          };
         };
       }else{
         for(let index in this.switchEngines){
           if( _.indexOf(this.switchCategorys[categoryName], this.switchEngines[index].name)===-1) continue;
-          currentCategory[index] = {name:this.switchEngines[index].name,value:this.switchEngines[index].value,type:postType};
+          currentCategory[index] = {
+            name:this.switchEngines[index].name,
+            value:this.switchEngines[index].value,
+            type:postType
+          };
         };
       }
       return currentCategory;
@@ -469,14 +491,15 @@ export default {
     }
   },
   created(){
-    var _this = this;
+    const _this = this;
+
     this.get_bangumi();
     setTimeout(function(){
       _this.getEngines();
-      _this.lzyplayHistory = JSON.parse(_this.lzyReadPlayerSets("playHistory")) || []; // load失败时保持自身类型不变（array），否则后面报错null无length属性
       _this.someSettings.immerse = _this.lzyReadPlayerSets("immerse");
       _this.someSettings.statistics = _this.lzyReadPlayerSets("statistics");
       _this.someSettings.darkMode = _this.lzyReadPlayerSets("darkMode");
+      _this.someSettings.server = _this.lzyReadPlayerSets("server") || _this.someSettings.server;
     },999);
   }
 };
@@ -505,16 +528,6 @@ export default {
   margin: auto 8px;
   vertical-align: top;
 }
-.historyItem{
-  display:inline-block;
-  padding: 3px 9px;
-  text-indent:0!important;
-  border-radius: 5px;
-}
-.historyItem > span{
-  display:inline-block;font-size:18px;vertical-align:top;margin-left:5px;padding:0 4px;cursor:pointer;color:#ff4e4e;
-}
-.historyItem:hover{background: #fce2e7;}
 .lzyHead{font-size: 16px;margin-bottom: 0;padding-left: 14px;border-left: 4px solid pink;}
 
 .lzyalign-left{
@@ -523,11 +536,13 @@ export default {
 }
 .fastSettings{display: inline-block;margin: auto 2px;}
 
-.bangumi{
+.bangumi, .bangumi .v-image__image{
   cursor: pointer;
+  transition: all .5s linear;
 }
-
-/* 段落文字前的伪元素小标签 */
+.bangumi .v-image .v-image__image--cover:hover{
+  transform: scale(1.05);
+}
 .engineP,.searchHistoryP{position: relative;}
 .engineP::before{
   content: 'Engine';
@@ -552,5 +567,11 @@ export default {
   background: #fa5363;
   color:#fff;
   border-radius: 4px;
+}
+@media screen and (max-width: 500px){
+  .welcomeHead{
+    font-size:1.2em!important;
+  }
+
 }
 </style>

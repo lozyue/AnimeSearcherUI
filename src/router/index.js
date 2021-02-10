@@ -1,10 +1,10 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import HelloWorld from '../components/HelloWorld.vue'
-import Home from '../components/Home.vue'
+import HelloWorld from '../Pages/HelloWorld.vue'
+import Home from '../Pages/Home.vue'
 
-import Details from '@/components/Details.vue'
-import TVLive from '@/components/TVLive.vue'
+import Details from '@/Pages/Details.vue'
+import TVLive from '@/Pages/TVLive.vue'
 
 Vue.use(VueRouter)
 

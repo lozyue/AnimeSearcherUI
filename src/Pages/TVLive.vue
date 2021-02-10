@@ -31,8 +31,8 @@
 </template>
 
 <script>
-import logoImg from "@/assets/logo.png";
-import VueDPlayer from "./vue-dplayer-raw.vue";
+import logoImg from "@/assets/images/logo.png";
+import VueDPlayer from "../auxiliary/vue-dplayer-raw.vue";
 import _ from 'lodash';
 
 export default {
@@ -41,7 +41,6 @@ export default {
     "d-player": VueDPlayer
   },
   data: () => ({
-    // 播放器参数
     video: {
       quality: [
         { name: "1080P", url: 'http://ivi.bupt.edu.cn/hls/cctv1hd.m3u8'},
@@ -49,12 +48,11 @@ export default {
       ],
       pic: "",
       defaultQuality: 0,
-      // thumbnails: logoImg,
       type: "auto"
     },
     lang: "zh-cn",
     logo: false,
-    danmaku:{},
+    danmaku: null,
     contextmenu: [
       {
         text: "AnimeSercher",
@@ -69,7 +67,6 @@ export default {
         link: "https://github.com/lozyue/",
       },
     ],
-    // TV List 数据存储
     TVList:[],
     playersettings:{
         isProxy:false,
@@ -82,7 +79,7 @@ export default {
   methods:{
       getTVList(){
           const _this=this;
-          this.$http.get("/live/list").then(function(res){
+          this.$http.get("iptv/list ").then(function(res){
               if(res.status===200) _this.TVList = res.data;
           }).catch(function(e){console.error(e)});
       },
@@ -103,7 +100,6 @@ export default {
         // 展示当前播放信息
       },
       lzyResponse(){
-          console.log("播放失败");
       }
   },
   created(){

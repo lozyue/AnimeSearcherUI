@@ -40,7 +40,7 @@ export default {
     player: null,
     danmaku:{
       bottom:'46px',
-      addition:[], // 额外外挂弹幕，可以合并多个源
+      addition:[],
     },
     contextmenu: [
       {
@@ -59,8 +59,6 @@ export default {
   }),
   methods: {
     play() {
-      console.log("play roll back");
-      console.log(this.video.quality);
     }
   },
   mounted() {
@@ -69,11 +67,8 @@ export default {
   watch:{
     mytestStr:function(newstr){console.log(newstr);},
     playersettings:function(set){
-      console.log("设置发生了改变！")
       
       const player = this.$refs.player.dp;
-      console.log(set);
-      console.log(player)
       }
   }
 };

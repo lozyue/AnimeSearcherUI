@@ -1,5 +1,7 @@
 <template>
-  
+  <div>
+    <!-- Silent is Gold -->
+  </div>
 </template>
 
 <script>
@@ -8,6 +10,9 @@ export default {
     data:()=>({
         
     }),
+    created(){},
+    mounted(){},
+    destroyed(){}
 }
 </script>
 

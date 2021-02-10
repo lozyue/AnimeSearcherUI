@@ -5,7 +5,9 @@ import vuetify from './plugins/vuetify'
 
 import axios from 'axios'
 import Hls from 'hls.js'
-import './assets/styles/global.css'
+
+import lzyfunctions from "./assets/js/lzyfunctions.js"
+import './assets/styles/global.scss'
 
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
@@ -15,15 +17,17 @@ NProgress.configure({
 });
 
 window.Hls = Hls;
+
 var mypath = window.location.pathname;
+Vue.prototype.$magic = new lzyfunctions();
 axios.defaults.baseURL = 'http://127.0.0.1:6001/';
-Vue.prototype.$baseSocket = 'ws://127.0.0.1:6002/';
+axios.defaults.$baseSocket = 'ws://127.0.0.1:6001/';
 
 axios.interceptors.request.use(function (lzyConfigs){
     if(lzyConfigs.method==='get'){lzyConfigs.data=true;}
     lzyConfigs.withCredentials = false;
     NProgress.start();
-    return lzyConfigs;  // 必要步骤，返回修改后的配置
+    return lzyConfigs;
 });
 axios.interceptors.response.use(function(config){
   NProgress.done();
@@ -47,7 +51,7 @@ router.beforeEach(function (to, from, next){
     var a=amendURL.substr(0,amendURL.length-1);
     return next(a);
   }
-  return next(); // 默认放行
+  return next();
 });
 
 Vue.config.productionTip = false
@@ -56,4 +60,4 @@ new Vue({
   router,
   vuetify,
   render: h => h(App)
-}).$mount('#app')
+}).$mount('#app');

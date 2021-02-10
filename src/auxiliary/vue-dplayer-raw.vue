@@ -3,14 +3,25 @@
 </template>
 
 <script>
-import DPlayer from "dplayer"; // 直接安装dplayer
+import DPlayer from "dplayer";
 
 export default {
   props: {
+    storageMode: {
+      type: String,
+      default: 'inner',
+    },
+    settingStorage: {
+      type: Object,
+    },
+    highlight: {
+      type: Array,
+    },
     autoplay: {
       type: Boolean,
       default: false
     },
+
     theme: {
       type: String,
       default: "#FADFA3"
@@ -57,6 +68,9 @@ export default {
     if(player!==null) this.$forceUpdate();
     const player = (this.dp = new DPlayer({
       element: this.$el,
+      storageMode: this.storageMode,
+      settingStorage :this.settingStorage,
+
       autoplay: this.autoplay,
       theme: this.theme,
       loop: this.loop,
@@ -66,26 +80,9 @@ export default {
       preload: this.preload,
       contextmenu: this.contextmenu,
       logo: this.logo,
-      danmaku:{
-        id:this.danmaku.id,
-        api:this.danmaku.api,
-      },
-      video: {
-        pic: this.video.pic,
-        defaultQuality: this.video.defaultQuality,
-        quality: [
-          {
-            url: this.video.quality[0].url,
-            name: this.video.quality[0].name
-          },
-          {
-            url: this.video.quality[1].url,
-            name: this.video.quality[1].name
-          },
-        ],
-        thumbnails: this.video.thumbnails,
-        type: this.video.type
-      }
+
+      danmaku: this.danmaku || null,
+      video:this.video
     }));
     player.on("play", () => {
       this.$emit("play");
@@ -115,11 +112,14 @@ export default {
     player.on("error", (emsg) => {
       this.$emit("error",emsg);
     });
-    player.on("onpress_[", (is_previous) => {
+    player.on("onpress_[]", (is_previous) => {
       this.$emit("lzyplay_hotkeyToggle",is_previous);
     });
-    player.on("onpress_]", (is_previous) => {
-      this.$emit("lzyplay_hotkeyToggle",is_previous);
+    player.on("settingchange", (needSave) => {
+      this.$emit("settingchange", needSave);
+    });
+    player.on("onplaynext", ()=>{
+      this.$emit("onplaynext");
     });
   },
   beforeDestroy(){

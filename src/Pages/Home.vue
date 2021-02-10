@@ -7,7 +7,7 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="12" class="lzytransparent boxw">  
-          <v-row v-if="loading" align="center" justify="space-around">
+          <v-row v-show="loading" align="center" justify="space-around">
             <v-sheet
               v-for="i in 12" :key=i
               class="px-3 pt-3 pb-3 col col-3 bg-0"
@@ -16,7 +16,7 @@
               <v-skeleton-loader class="mx-auto" max-width="300" type="image, article"></v-skeleton-loader>
             </v-sheet>
           </v-row>
-            <transition-group v-else class="flip-flex-contianer" name="flip-card" tag="div">
+            <transition-group v-show="!loading" class="flip-flex-contianer" name="flip-card" tag="div">
             <v-card class="lzycontainer" transition="v-scale-transition" v-for="(item, i) in searchBack" :key="i">
               <a
                 class="lzylink resCard"
@@ -74,9 +74,11 @@
 </template>
 
 <script>
+// @ is an alias to /src
 
 export default {
   name: "Home",
+  inheritAttrs:false,
   props: ["searchVal","searching"],
   data: () => ({
     myflex: 4,
@@ -84,25 +86,29 @@ export default {
     searched: false,
     searchBack: [],
     currentPath: window.location.pathname,
-    
+    currentSearch: '',
     loading : true,
   }),
   methods: {
     getDetail: function(url) {
       this.$router.push("/details" + url.substr(url.lastIndexOf("/")));
-    }
-  },
-  created() {
-    if (this.searched) this.searchStatu = "正在搜索……";
-    else{
-      if(this.$route.params.search!==null && this.$route.params.search){
-        this.$emit('search',this.$route.params.search)
+    },
+    shootSearch(){
+      if (this.searched) this.searchStatu = "正在搜索……";
+      else{
+        if(this.$route.params.search!==null && this.$route.params.search){
+          this.currentSearchStr = this.$route.params.search;
+          this.$emit('search',this.currentSearchStr)
       }else{
         this.$router.push('/index');
       }
       this.searchStatu = "输入关键字然后 Go Search 吧！";
     }
     this.$emit("addAction","userFocus");
+    }
+  },
+  created() {
+    this.shootSearch();
   },
   watch: {
     searchVal: function(val) {
@@ -125,14 +131,19 @@ export default {
       }
     }
   },
+  activated(){
+    if(this.$route.params.search!==this.currentSearchStr){
+      // 重新搜索
+      this.shootSearch();
+    }
+  },
   destroyed(){
-    this.$emit('addAction','userNoFocus');
+    this.$emit('addAction','userImmerse');
   }
 };
 </script>
 <style>
 .box {
-  /* max-height: 400px; */
   min-width: 300px;
   margin: 10px auto;
   z-index: 1;
@@ -154,7 +165,6 @@ export default {
   margin: 10px 6px;
   width: 270px;
   border-radius: 15px!important;
-  /* min-width: 300px; */
 }
 .meta {
   font-size: 12px;
@@ -167,7 +177,6 @@ export default {
   border-radius: 8px;
 }
 .lzydescription{margin-bottom: 24px;margin-bottom: calc(10%);}
-/* .lzydescription:hover .lzytext, */
 .lzycontainer:hover .lzydescription .lzytext {
   opacity: 1;
   animation: bounceInUp 0.6s linear;
@@ -197,7 +206,6 @@ export default {
   padding: 6px;
   font-size: 16px;
   margin: 0 auto auto 10px;
-  /* height: 30px; */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -228,8 +236,6 @@ export default {
   display: inline-block;
   transition: all 1s;
 }
-
-/* Flip Animation */
 .flip-card-leave-active {
   position: absolute;
 }
