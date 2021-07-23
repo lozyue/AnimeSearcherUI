@@ -342,7 +342,7 @@ export default {
         this.someSettings.server += '/';
       }
       this.$http.defaults.baseURL = this.someSettings.server;
-      this.$http.defaults.$baseSocket = 'ws://' + this.someSettings.server.replace(/(http(:?s)*:\/\/)/,'');
+      this.$http.defaults.$baseSocket = this.someSettings.server.replace(/^http/,"ws");
       this.$emit("lzyglobalSettings","server","set", this.someSettings.server);
       this.$emit("lzyglobalSettings","server","save");
       this.$emit("message","服务地址已保存,后续访问页面生效！","success",-1);
