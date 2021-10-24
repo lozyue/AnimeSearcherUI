@@ -1,0 +1,18 @@
+{
+  "name": "custom",
+  "description": "自定义子主题配色",
+  "author": {
+    "nick": "God",
+    "link": "http://github.com/"
+  },
+  "home": "http://github.com/lozyue/animesearcherui/",
+  "thumbs": "",
+  "blending": {
+
+  },
+  "colors":{
+
+  }
+  // 内置子主题 Custom 主题具有最高优先级。由于其不具有继承关系，其 dark 选项无效. The `dark` options of custom is invalid.
+  // "dark": true
+}

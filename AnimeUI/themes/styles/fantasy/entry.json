@@ -1,0 +1,19 @@
+{
+  "name": "fantasy",
+  "alias": "次元梦幻",
+  "description": "磨砂风梦幻主题",
+  "author": {
+    "nick": "Lozyue",
+    "avatar": "avatar.png",
+    "link": "http://github.com/lozyue"
+  },
+  "home": "http://github.com/lozyue/animesearcherui/#public/themes/fantasy",
+  "thumbs": "/thumbs.jpg" ,
+  "blending": {
+    "onLight": "dew",
+    "onDark": "dew-dark"
+  },
+  "styles": ["/fantasy.css", "/override.css"],
+  "scripts": ["/main.js"],
+  "async_script": false
+}
