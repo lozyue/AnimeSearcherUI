@@ -1,0 +1,16 @@
+{
+  "name": "AnimeSearcher Web UI",
+  "short_name": "AnimeUI",
+  "description": "Progressive Web App that lists games submitted to the A-Frame category in the js13kGames 2017 competition.",
+  "icons": [
+    {
+      "src": "icons/icon-32.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/index.html",
+  "display": "fullscreen",
+  "theme_color": "#f294c6",
+  "background_color": "#9bdef5"
+}

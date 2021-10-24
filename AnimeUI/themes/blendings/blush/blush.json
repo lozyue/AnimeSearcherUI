@@ -1,0 +1,48 @@
+{
+  "name": "blush",
+  "nick": "AnimePink",
+  "description": "原 AnimeSearcherUI 的Light版配色哦",
+  "author": {
+    "nick": "Lozyue",
+    "avatar": "https://portrait.gitee.com/uploads/avatars/user/2172/6516524_lozyue_1583296353.png!avatar200",
+    "link": "http://github.com/lozyue"
+  },
+  "home": "http://github.com/lozyue/animesearcherui/#public/themes/fantasy",
+  "thumbs": "thumb.jpg",
+  "blending": {
+    "background": "#fff",
+    "surface": "#fff",
+
+    "primary": "#e91e63",
+    "secondary": "#21acff",
+    "tertiary": "#f0917e",
+    "quaternary": "#dfb7d6",
+
+    "on-primary": "#fff",
+    "on-secondary": "#fff",
+    "on-tertiary": "#fff",
+    "on-quaternary": "#fff",
+    
+    "success": "#12ee0f",
+    "warning": "#129fad",
+    "error": "#f05050",
+    "info": "#58666e",
+
+    "on-success": "#fff",
+    "on-warning": "#fff",
+    "on-error": "#fff",
+    "on-info": "#fff"
+  },
+  "colors":{
+    "pink": "#fcbad3",
+    "green": "#00bf00",
+    "blue": "#00a1d6",
+    "yellow" : "#fbe765",
+    "orange": "#ff9800",
+    "purple": "#eab4f8",
+    "cream": "#fce2ce",
+    "grey": "808080",
+    "lightgrey": "#d3d3d3"
+  },
+  "dark": false
+}
