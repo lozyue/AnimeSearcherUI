@@ -4,8 +4,8 @@ import { DEBUG } from './const';
  * Some helpful functions for Dom and Bom operation.
  */
 
-import { is_Defined, is_Function, once, removeArrayItem } from './util';
-
+import { arbitraryFree, deepSupplement, is_Array, is_Defined, is_Function, objectSupplement, once, removeArrayItem } from './util';
+import { lyscrollTo } from './modules/lyscrollTo';
 
 
 export const toggleClass = function(ele: HTMLElement, className: string){
@@ -160,7 +160,12 @@ export function inject_style(text: string, url = '', props = {}, append = false)
   var styleTag = url ? 'link' : "style";
   var styles = document.getElementsByTagName(styleTag)[0];
   var newStyle = document.createElement(styleTag);
-  if (url) newStyle.setAttribute('href', url);
+  if (url){
+    objectSupplement(props, {
+      rel: "stylesheet",
+    });
+    newStyle.setAttribute('href', url);
+  }
   else
     newStyle.textContent = text;
   for (let k in props)
@@ -285,105 +290,62 @@ function cancel_fullscreen(ele: HTMLElement) {
   ele.classList.remove('lybrowser-fulled');
 }
 
-/**
- * Scroll function with customizable scroll options.
- * By two ways:
- *  The One is scrolling by Element target.
- *  The Two is scrolling by given left and top (default is zero);
- * Do not support IE if using default smooth. // fix, supported
- * Expected options: {
- *  Target: HTMLElement,
- *  top: number, left: number, // if has target property, these will be ignored
- *  offsetTop: number, offsetLeft: number, // set the left offset and top offset.
- *  ease: (t: number)=>number // for rate controller. default is smooth. `t` is the percentage.
- *    (t)=>{t*t} // ease-in 
- *    (t)=>{t} // liner
- * }
- * Meanings: 
- *  top, left: The user setting of the page stop absolute position. Default current position or target Element position.
- *  offsetTop, offsetLeft: The user assign it for relative position move. To up/left should set to negative, or so positive.
- * For example: (If scrollable)
- *   lyscrollTo({}); // no move.
- *   lyscrollTo({top: 0}) // move to top;
- *   lyscrollTo({target: document.body, offsetTop: -200}); move the page to scroll down about 200px.
- */
-export const lyscrollTo = function(options: any=Object.create(null)) {
-  // required
-  // const {
-  //   duration: duration,
-  // } = options;
-
-  let duration = options.duration || 500; // forbidden 0?
-  // current absolute position.
-  let startTop = window.pageYOffset;
-  let startLeft = window.pageXOffset;
-  // target absolute position
-  let top = Reflect.has(options, "top")? options.top: startTop; // current vertical top.
-  let left = Reflect.has(options, "left")? options.left: startLeft; // current left.
-  // target relative position
-  let offsetLeft = options.offsetLeft || 0;
-  let offsetTop = options.offsetTop || 0;
-
-  if(options.target){
-    const rect = options.target.getBoundingClientRect();
-    console.log(rect);
-    // override the absolute position if target is setted
-    top = rect.top + startTop;
-    left = rect.left + startLeft;
-  }
-  // get the calculated props.
-  // Have the toTop or to down cases:
-  let diffTop = top - startTop + offsetTop;
-  let diffLeft = left - startLeft + offsetLeft;
-
-  let easeFunc: null| ((t: number)=>number ) = options.ease || null;
-  
-  // if(options.target){
-  //   if(!options.ease && options.target.scrollIntoView){
-  //     options.scrollIntoView({smooth: true});
-  //     options.scrollIntoView(true)
-  //   }
-  // }
-
-  // DEBUG && console.log({top, left, diffLeft, diffTop, easeFunc, startTop, startLeft, duration, offsetLeft, offsetTop})
-
-  // default scroll
-  if(!easeFunc){
-    // This do not supported in IE.
-    window.scrollTo({
-      left: startLeft + diffLeft, 
-      top: startTop + diffTop,
-      behavior: "smooth",
+export function onceClassAnimation(animeClasses: string|string[], target: HTMLElement, delegate: HTMLElement|null=null, autoRemove = true){
+  let handle = function(eve){
+    arbitraryFree(animeClasses, (aClass)=>{
+      eve.target.classList.remove(aClass);
     });
-    // For compatibility.
-    window.scrollTo(startLeft + diffLeft, startTop + diffTop);
-    return true;
-  }
-  // custom scroll
-  let startTime = null;
-  let requestID;
-  const loop = function(currentTime) {
-    if (!startTime) {
-        startTime = currentTime;
-    }
-
-    // Elapsed time in miliseconds
-    const time = currentTime - (startTime as any);
-
-    const percent = Math.min(time / duration, 1);
-    // custom easeFunc
-    window.scrollTo(startLeft + diffLeft * (easeFunc as Function)(percent), 
-      startTop + diffTop * (easeFunc as Function)(percent));  
-    
-    if (time < duration) {
-      // Continue moving
-      requestID = window.requestAnimationFrame(loop);
-    } else {
-      window.cancelAnimationFrame(requestID);
+    if(autoRemove){
+      (delegate|| target).removeEventListener('animationend', handle);
     }
   };
-  requestID = window.requestAnimationFrame(loop);
-};
+  (delegate|| target).addEventListener('animationend', handle);
+  arbitraryFree(animeClasses, (aClass)=>{
+    (delegate|| target).classList.add(aClass);
+  });
+}
+
+
+/**
+ * A multi invoke animation with reset controll.
+ *  For vue director.
+ * @param animeClasses 
+ * @param target 
+ * @param delegate 
+ * @param autoRemove 
+ * @param withReset 
+ * @returns A closure function for later invoke.
+ */
+export function multiClassAnimation(animeClasses: string|string[], target: HTMLElement, withReset = false){
+  let handle = function(eve, isRemove=true){
+    arbitraryFree(animeClasses, (aClass)=>{
+      if(isRemove)
+        eve.target.classList.remove(aClass);
+      else
+        target.classList.add(aClass);
+    });
+    // if(allowRemove && autoRemove){
+    //   (delegate|| target).removeEventListener('animationend', handle);
+    // }
+  };
+  
+  // Add it!
+  (target).addEventListener('animationend', handle);
+  
+  // arbitraryFree(animeClasses, (aClass)=>{
+  //   (target).classList.add(aClass);
+  // });
+
+  return function($eve){
+    if(withReset){
+      // Reset the animation
+      handle({target:(target)}, true);
+    }
+    handle({target:(target)}, false);
+  }
+}
+
+
 
 /**
  * Document ready functions with compatibility.
@@ -422,42 +384,136 @@ export var documentReady = (function () { // use js closure to return `whenReady
   }
 })();
 
+// Preparation for `getEventDelegate` and `traceTopMatch`.
+const matchFunc = (target: HTMLElement|Node&ParentNode, matchPattern)=>{
+  if(is_Function(matchPattern)){
+    return (matchPattern as Function)(target);
+  }
+  else if(target["matches"])
+    return (target as HTMLElement).matches(matchPattern as string);
+  else if(target === document)
+    return false;
+  else
+    throw new Error(`[traceTopMatch]: the node ${target} without "matches" method is not distinguished \n Whose nodetype is ${target.nodeType}`);
+};
+/**
+ * The match multi situation at once.
+ * This is the upgrated version of tranceTopMatch.
+ *  Except of the uncustomizable `match` params.
+ *  And the searchDepth cannot be appointed respectively.
+ * That's for utility consideration. 
+ *  You should apply it with suitable and optimismed Dom structures
+ *    and with increasing sequence.
+ * It will invoke all the notMatch callback before it matched!
+ * @param {Boolean} findAll It will stop at the first match when it is false. 
+ */
+export const traceMultiTopMatch = (targetEle: HTMLElement|Node&ParentNode, matchParcel: Record<string, MatchInvoke | [MatchInvoke, MatchInvoke]>, maxSearchDepth = 0, findAll = false)=>{
+  for(let matchStr in matchParcel){
+    var matched, notMatched: null| MatchInvoke = null;
+    if(is_Array (matchParcel[matchStr])){
+      [matched, notMatched] = matchParcel[matchStr] as [MatchInvoke, MatchInvoke];
+    } else{
+      matched = matchParcel[matchStr];
+    }
+    let tempElement = targetEle;
+    for(let i=0; (!maxSearchDepth || i<maxSearchDepth); i++){
+      if(matchFunc(tempElement, matchStr)){
+        // no `this` pointer in invoke function.
+        matched(tempElement as HTMLElement);
+        if(!findAll)
+          return;
+        else
+          break;
+      }
+      // `this` is appointed to the wrapper Element. When it is in vue, this is the vue instances.
+      if(!tempElement.parentNode){
+        DEBUG && console.warn("[traceTopMatch]: The target Element has no parentNode. Search was terminated! \nLimit the maxSearchDepth can prevent and help with performance!", tempElement);
+        // invoke the not match
+        if(notMatched){
+          notMatched(tempElement as HTMLElement);
+        }
+        return;
+      }
+      tempElement = tempElement.parentNode;
+    } // for loop end.
+    if(notMatched){
+      notMatched(tempElement as HTMLElement);
+    }
+  } // for loop end.
+}
+
+/**
+ * Simply like the `getEventDelegate` function.
+ * But it is a process which only cares target Element and won't keep the this pointer.
+ * Which is not provided by user.
+ * Besides it has the return value.
+ * @returns {null | unknown} return the callback value. And default is null.
+ */
+type MatchInvoke = (el:HTMLElement)=>any;
+export const traceTopMatch = (targetEle: HTMLElement|Node&ParentNode, invoke: MatchInvoke | [MatchInvoke, MatchInvoke], matchPattern: string | ((target: HTMLElement)=>Boolean), maxSearchDepth = 0)=>{
+  let matched, notMatched: null| MatchInvoke = null;
+  if(is_Array (invoke)){
+    [matched, notMatched] = invoke as [MatchInvoke, MatchInvoke];
+  } else{
+    matched = invoke;
+  }
+
+  for(let i=0; (!maxSearchDepth || i<maxSearchDepth); i++){
+    if(matchFunc(targetEle, matchPattern)){
+      // no `this` pointer in invoke function.
+      return matched(targetEle as HTMLElement);
+    }
+    // `this` is appointed to the wrapper Element. When it is in vue, this is the vue instances.
+    if(!targetEle.parentNode){
+      DEBUG && console.warn("[traceTopMatch]: The target Element has no parentNode. Search was terminated! \nLimit the maxSearchDepth can prevent and help with performance!", targetEle);
+      // invoke the not match
+      return notMatched && notMatched(targetEle as HTMLElement);
+    }
+    targetEle = targetEle.parentNode;
+  } // for loop end.
+  // default failed！
+  return notMatched && notMatched(targetEle as HTMLElement);
+}
+
 /**
  * For element Event delegation.
  * @returns A closure function for delegate event listener.
- * @param invoke The actions to do when matched
- * @param match The manually Boolean match function or a css query string.
+ * @param invoke The actions to do when matched; Use the [match, notMatched] array for complex needs.
+ * @param matchPattern The manually Boolean match function or a css query string.
  * @param maxSearchDepth If target source of current Event is not matched, it will try to matched its parent.
  *  The iterate counts is setted by this param.
  */
-export function getEventDelegate(invoke: (target: Event)=>any, match: string | ((target: HTMLElement)=>Boolean), maxSearchDepth = 0){
+type WhenInvoke = (target: Event, el:HTMLElement)=>any;
+export function getEventDelegate(invoke: WhenInvoke | [WhenInvoke, WhenInvoke], matchPattern: string | ((target: HTMLElement)=>Boolean), maxSearchDepth = 0){
+  let matched, notMatched: null| WhenInvoke = null;
+  if(is_Array (invoke)){
+    [matched, notMatched] = invoke as [WhenInvoke, WhenInvoke];
+  } else{
+    matched = invoke;
+  }
+  // Back an closure which could have the this pointer.
   return function($event: Event){
     // 兼容性处理
     var eve = $event || window.event;
     var targetEle: HTMLElement|Node&ParentNode = (eve.target || eve.srcElement) as HTMLElement;
-    const matchFunc = (target: HTMLElement|Node&ParentNode)=>{
-      if(is_Function(match)){
-        return (match as Function)(target);
-      }
-      else if(target["matches"])
-        return (target as HTMLElement).matches(match as string);
-      else
-        throw new Error(`[getEventDelegate]: the node ${target} without "matches" method is not distinguished \n Whose nodetype is ${target.nodeType}`);
-    };
 
     for(let i=0; (!maxSearchDepth || i<maxSearchDepth); i++){
-      if(matchFunc(targetEle)){
+      if(matchFunc(targetEle, matchPattern)){
         // The inner this is pointed to the matched targetEle.
-        invoke.call(targetEle, $event);
-        break;
+        // invoke.call(targetEle, eve);
+        // If it was used in vue, the this will pointed to the instance
+        return matched.call(this, eve, targetEle as HTMLElement);
       }
-      if(!targetEle.parentNode){
-        DEBUG && console.warn("[getEventDelegate]: The target Element has no parentNode.Search was terminated! \nPlease set maxSearchDepth to prevent!", targetEle);
-        return;
+      // `this` is appointed to the wrapper Element. When it is in vue, this is the vue instances.
+      if(!targetEle.parentNode || (this && (this===targetEle || this.el===targetEle ) ) ){
+        DEBUG && console.warn("[getEventDelegate]: The target Element has no parentNode. Search was terminated! \nLimit the maxSearchDepth can prevent and help with performance!", targetEle);
+        // invoke the not match
+        return notMatched && notMatched.call(this, eve, targetEle as HTMLElement);
       }
       targetEle = targetEle.parentNode;
-    }
-    // for loop end.
+    } // for loop end.
+    // when it has a collision to maxSearchDepth, it was failed with no return.
+    return notMatched && notMatched.call(this, eve, targetEle as HTMLElement);
   }
 }
 
@@ -514,4 +570,8 @@ export function copyToClipboard_compatible(value: string) {
     console.log('复制成功');
   }
   document.body.removeChild(input);
+}
+
+export {
+  lyscrollTo,
 }

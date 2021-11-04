@@ -6,6 +6,7 @@
     "avatar": "avatar.png",
     "link": "http://github.com/lozyue"
   },
+  "blending": "light",
   "home": "http://github.com/lozyue/animesearcherui/#public/themes/fantasy",
   "thumbs": "/thumbs.jpg" ,
   "styles": ["/main.css"],

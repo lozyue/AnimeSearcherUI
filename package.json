@@ -3,10 +3,10 @@
   "version": "2.0.0-alpha0",
   "private": false,
   "scripts": {
-    "serve": "vuepress dev docs",
-    "build": "vuepress build docs",
-    "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs"
+    "serve": "vuepress dev docs-src",
+    "build": "vuepress build docs-src",
+    "docs:dev": "vuepress dev docs-src",
+    "docs:build": "vuepress build docs-src"
   },
   "dependencies": {},
   "devDependencies": {

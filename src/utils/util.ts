@@ -6,6 +6,76 @@
 import { DEBUG } from './const';
 
 /**
+ * Get the target curve path value of the source Object.
+ * The curve path is a sequenced array
+ * @param source 
+ * @param objPathes 
+ */
+export function curveGet(source: Object, objPathes: string[]){
+  let interim = source, item = '';
+  for(let index=0; index<objPathes.length; index++){
+    item = objPathes[index];
+    interim = interim[item]
+    if(interim === void 0 ){
+      return void 0;
+    };
+  }
+  return interim;
+}
+
+/**
+ * Set the consistent even curve path of the source Object 
+ * The curve path is a sequenced array // dot split strings.
+ * @param source 
+ * @param objPathes 
+ * @param {unknown|Function} value The value assign for the curve object target. Support callback that if target value is a function you should set it in call back.
+ * @returns { number|true } The number indicator the failed position of the conflict path.
+ */
+export function curveSet(source: Object, objPathes: string[], value: unknown|((item: Object, name: string)=>any) = null){
+  let interim = source, item = '';
+  for(let index=0; index<objPathes.length; index++){
+    item = objPathes[index];
+    // existed.
+    if(interim[item] ){
+      if(is_PlainObject(interim[item])){
+        interim = interim[item];
+      // Unexpected non-object value.
+      } else {
+        return index;
+      }
+    // non existed and not the last
+    } else if(index+1< objPathes.length){
+      interim = interim[item] = {};
+    // the last
+    } else {
+      // assign the value.
+      if(is_Function(value))
+        (value as Function)(interim, item);
+      else
+        interim[item] = value;
+    }
+  };
+  return true;
+}
+
+/**
+ * Get the pretty date Object of particular time.
+ *  
+ */
+export const getPrettyTime = (...particularTime:unknown[])=>{
+  // const nowTime = !is_Empty(particularTime)? new Date(...(particularTime) ): new Date();
+  const nowTime = new Date();
+  return {
+    year: nowTime.getFullYear(),
+    month: nowTime.getMonth()+ 1,
+    date: nowTime.getDate(),
+    hour: nowTime.getHours(),
+    minute: nowTime.getMinutes(),
+    second: nowTime.getSeconds(),
+  }
+};
+
+/**
  * Deep Object.assign source to target.
  * @param target
  * @param source
@@ -106,8 +176,8 @@ export function throttle(handler:Function, wait :number){
   return function () {
       var nowTime = new Date().getTime();
       if (nowTime - lastTime > wait) {
-          lastTime = nowTime;
-          handler.apply(this, arguments);
+        lastTime = nowTime;
+        handler.apply(this, arguments);
       }
   }
 }
@@ -159,14 +229,16 @@ export function throttBounce(handle:Function, period :number){
  * Just call a function once.
  * Return a closure.
  */
-export function once(func){
+export function once<T extends (...args: [unknown])=>ReturnType<T> > (func: T): T{
   let called = false;
-  return function () {
+  let value:null| ReturnType<T> = null;
+  return function (...params: [unknown]){
     if (!called) {
       called = true;
-      func.apply(this, arguments);
-    }
-  }
+      return (value = func.apply(this, params) );
+    }else
+      return value as unknown as ReturnType<T>;
+  } as unknown as T;
 }
 
 /**
@@ -209,13 +281,15 @@ export function arbitraryFree<T> (input: Array<T>|T, func: (a:T, b:number)=>any)
 /**
  * Wrap the stuff with inputs, accepting Array or Non-Array input. 
  * A list of arguments with truth check for condition logical supplement. 
+ * Amend on 2021-10-07: Add chief reference protection of the wrappered input.
+ *  !!! Warning: The later stuffs will loose its reference. 
  * @param  {...any} inputs 
  * @returns { Array } returns the wrapped array.
  */
 export function arbitraryWrap<T> (...inputs: Array<Array<T>|T>): Array<T>{
-  const backArray: Array<any> = [];
+  const backArray: Array<T> = (is_Array(inputs[0])? inputs[0]: [inputs[0] ]) as T[];
   let item;
-  for(let index=0; index<inputs.length; index++){
+  for(let index=1; index<inputs.length; index++){
     item = inputs[index];
     if(!is_Defined(item) ){
       continue;
@@ -277,9 +351,9 @@ export var toTrueArray:(a:{[propName:number]: any})=>Array<any> = (arraySimilar_
 }
 
 export const is_Defined = (v: any):Boolean => (v !== undefined && v !== null);
-export const is_Array = (obj: Object):Boolean => (Array.isArray && Array.isArray(obj) || (typeof obj === 'object') && obj.constructor == Array);
+export const is_Array = (obj: unknown):Boolean => (Array.isArray && Array.isArray(obj) || (typeof obj === 'object') && (obj as Object).constructor == Array);
 export const is_String = (str: Object):Boolean => ((typeof str === 'string') && str.constructor == String);
-export const is_Function = (obj: Object):Boolean => (obj instanceof Function || obj.constructor == Function );
+export const is_Function = (obj: unknown):Boolean => (obj instanceof Function || (obj as Object)?.constructor == Function );
 export const is_PlainObject = (obj: null|Object):Boolean => (Object.prototype.toString.call(obj) === '[object Object]');
 export const is_RegExp = (obj: Object):Boolean => (obj.constructor === RegExp);
 export const is_Promise = (val: any):Boolean => {
@@ -303,7 +377,7 @@ export const isPrimitive = (value: any):Boolean => {
 
 /**
  * Check the below list of variable type to judge empty
- *  - Number => !0
+ *  - Number => !0 & !NaN
  *  - Object => !{} // by Enumerable property length
  *  - Array => ![]
  *  - Boolean => !false
@@ -311,11 +385,11 @@ export const isPrimitive = (value: any):Boolean => {
  *  - isDefined
  * @param val 
  */
-export const is_Empty = (val: any)=>{
+export const is_Empty = (val: unknown)=>{
   if(!val) return true;
   if(is_Array(val)){
-    return !val.length;
+    return !(val as Array<unknown>).length;
   }else{
-    return !Object.keys(val).length;
+    return !Object.keys((val) as Object).length;
   }
 }
