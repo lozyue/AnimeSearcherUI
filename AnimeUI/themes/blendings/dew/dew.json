@@ -10,10 +10,10 @@
   "home": "http://github.com/lozyue/animesearcherui/#public/themes/fantasy",
   "thumbs": "thumb.jpg",
   "blending": {
-    "background": "#add8e6",
+    "background": "#ddd2c1",
     "surface": "#fff",
 
-    "on-background": "#fff",
+    "on-background": "#000",
     "on-surface": "#000",
 
     "on-primary": "#fff",

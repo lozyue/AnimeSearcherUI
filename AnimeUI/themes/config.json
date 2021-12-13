@@ -5,7 +5,6 @@
     "enabled": "default",
     "themes": [
       "fantasy",
-      "quasiphysical",
       "default"
     ]
   },
@@ -15,7 +14,6 @@
     "enabled": "light",
     "themes": [
       "dew", "dew-dark",
-      "blush", "blush-dark",
       "light",
       "dark"
     ]

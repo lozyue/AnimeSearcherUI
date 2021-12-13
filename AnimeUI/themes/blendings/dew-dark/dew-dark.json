@@ -24,7 +24,7 @@
     
     "success": "#12ee0f",
     "warning": "#129fad",
-    "error": "#f05050",
+    "error": "#ff4e4e",
     "info": "#58666e"
   },
   "colors":{

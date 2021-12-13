@@ -94,10 +94,21 @@ AnimeUI在开发时构思了一套微组件化设计，仅需编写很简单的�
 
 ### 使用主题风格功能库
 
-基于主题风格提供的可嵌入JavaScript，
-可以利用提供的API和共享的方法进行可靠的设定。
+主题风格最强大的地方就是主题风格提供了的可适时嵌入的Javascript，
+并专门提供了一系列强大或实用的API、函数等便于有任何开发基础的使用者进行定制。
 
-*主题风格API功能库目前均位于风格入口函数 `$theme` 执行回调的第一个参数中，对于接下来的应用，将省去这一说明。*
+要使用这一功能，仅需在创建的主题风格目录下创建有效的Javascript文件，
+然后将其相对路径添加到主题配置文件的 `scripts` 属性中，应用中切换到该主题风格时便会加载这个script文件。
+
+而最关键的就是如何编写这个Javascript文件了，其核心就在于AnimeUI提前向全局暴露的 `$theme` 函数。
+要使用主题风格提供的强大功能均可以从这个函数出发。
+
+`$theme`函数接收三个参数，第一个参数传递一个函数来说明要执行的功能，第二个参数也传递一个函数用于消除执行功能的副作用。
+第三个参数为一个JS对象，用于前面的功能进行限定。如指定在哪些页面路径生效，排除哪些页面等。
+
+详见： [API参考: $theme](api-config.html#theme)
+
+*主题风格功能库的API目前均位于风格入口函数 `$theme` 执行回调的参数中，对于接下来的应用，将省去这一说明。*
 
 接下来将使用一些实例来展示如何进行一些常用的定制。
 
@@ -138,16 +149,25 @@ AnimeUI在开发时构思了一套微组件化设计，仅需编写很简单的�
 
 ```js
 // background.js
-$theme(function(utilitys, utils){
-  // Add effection. Alter the shortcut
-  utilitys.setBackgroundClass('my-background');
-}, function(utilitys, utils){
-  // Clear Effection. Restore its original shortcut.
-  utilitys.setBackgroundClass('my-background', false);
-});
+(function(){
+  var handleObj = {
+    class: 'my-background',
+    style: '',
+  };
+  $theme(function(utility, utils){ // invoke function
+    // Add effection. Alter the shortcut
+    utility.setBackgroundClass(handleObj);
+  }, function(utility, utils){ // Revoke function
+    // Clear Effection. Restore its original shortcut.
+    utility.setBackgroundClass(handleObj, false);
+  }, {
+    // Do not override the background of 404 Page
+    excludePath: ["/404"]
+  });
+})
 ```
 
-然后同样在主题配置文件`entry.json`中引入它：
+然后同样在主题风格配置文件`entry.json`中引入它：
 ```json
 // entry.json
 {
@@ -155,8 +175,7 @@ $theme(function(utilitys, utils){
 }
 ```
 
-
-刷新一下，就可以看到我们设定的背景啦！
+将上述改动保存，在AnimeUI中切换到当前主题风格，就可以看到我们设定的背景啦！
 
 
 #### 自定义快捷键
@@ -179,7 +198,7 @@ $theme(function(utilitys, utils){
 });
 ```
 
-在主题配置文件`entry.json`中引入它：
+不要忘记在主题配置文件`entry.json`中引入新建的Javasript文件：
 ```json
 // entry.json
 {
@@ -190,10 +209,182 @@ $theme(function(utilitys, utils){
 设定当前页面位于Anime分区的路径 `/anime` 下才进行快捷键更改，因为目前这个切换搜索框的快捷键只有Anime分区支持。
 事实上只有当前会话访问过Anime分区才会在快捷键列表中看到这个快捷键。
 
-这里我们使用了`$theme`函数的第一个参数（回调函数）来对特定页面进行干涉，
+这里我们使用了`$theme`函数的第一个参数（回调函数）来对产生作用，
 并在第二个参数（回调函数）来消除之前产生的副作用。
 
-第三个参数（选项）指定了匹配页面的规则，仅在Anime分区生效。
+第三个参数（选项）则通过路径匹配限定上述作用和消除作用的页面，仅在Anime分区生效。
+
+::: tip
+限于篇幅原因，接下来的实例无特殊说明将省略对主题配置文件的修改，只展示核心源码示例。
+:::
 
 
+#### 添加主题风格选项
 
+仅需要很简单的配置，就可以通过`addThemeOptions`来添加一个主题风格选项。
+
+添加好的选项将会出现在 `/preference` 页面的主题选项中。
+
+```js
+$theme(function(utility, utils){
+  const customOption = {
+    name: "back_url", // Recommend to be combined with English Character and ASCII signs.
+    // The view of the input controller.
+    // Optional: "switchBox"|"textfieldBox" 
+    //   |"textareaBox"|"selectsBox" (Some are in developing); 
+    viewType: "textfieldBox", 
+    // Set the initial value by call the value-return function.
+    getValue: ()=>{
+      return "https://tva1.sinaimg.cn/large/005BYqpgly1frn9445odej31hc0u0kjl.jpg";
+    },
+    /**
+      * The onChange options will be automaticly called when the settings change. 
+      * @param {*} nVal The new value of changes.
+      * @param {*} oVal The old value before changes.
+      */
+    onChange: (nVal, oVal)=>{
+      rmHandle.style["background-image"] = `url(${nVal})`;
+      refresh the background; May cause backgroun confrontation.
+      utility.setBackground(rmHandle, true); // remove at first
+      utility.setBackground(rmHandle); // re-apply
+    },
+    // Make the onChange method apply on inited
+    onInitial: true,
+    viewData: {
+      title: "自定义背景图像链接: ",
+      hint: "填写API链接或者固定图像链接(立即见效版本，可能引起冲突)",
+    },
+  };
+  utility.addThemeOptions(customOption);
+})
+```
+
+以上的配置将会添加一个修改后实时更新背景的主题选项。
+其关键在于配置中的`onChange`回调属性会在选项发生改动后自动调用。
+
+但根据选项实时刷新背景会引起一个可能的冲突，因此示例主题Fantasy中并没有这么做。
+
+关于主题选项，你还可以在示例主题Fantasy中找到一些其它的。
+
+#### 添加首屏消息
+
+很简单的调用addNotifycation方法，就可以在导航页的消息通知组件中看到你添加的消息了！
+
+```js
+$theme(function(utility){
+  utility.addNotifycation("欢迎使用mystyle主题风格!");
+})
+```
+由于开发紧迫以及影响不那么大的原因，该方法产生的影响无法也不必消除。
+
+#### 装饰类方法
+
+这里介绍几个好看但没什么用的方法……
+
+添加一个视差装饰组件，可以跟随滚动（目前仅PC端），可以是图片、SVG等
+
+```js
+let handle = null;
+$theme(function(utility, utils){
+  handle = utility.addAdorement({
+    // Use `resolvePath` to support relative path.
+    image: utility.resolvePath("/images/cloud.png" ),
+    width: 72, height: 48,
+  });
+}, function(utility){
+  // 需消除影响
+  utility.removeAdorement(handle);
+}, {
+  // 排除偏好选项页
+  excludePath: '/preferences',
+});
+```
+
+注意到导航页的随机一言了吗？为了不过多增大体积，AnimeUI仅内置了很少的一言库。也没有使用网络上的API库。
+而是采取允许后续添加的方式。
+
+仅需很简单配置即可导入你的一言:
+```js
+$theme(function(utility){
+  const Quotations = [{
+      content: "天子呼来不上船，自称臣是酒中仙",
+      footer: "杜甫",
+    },{
+      content: "大行不顾细谨，大礼不辞小让",
+  }];
+
+  const action = ()=>{
+    utility.addQuotations(Quotations);
+  }
+  // 特定事件载入，仅初始执行一次
+  utility._once("quotationInited", action, false);
+}, function(utility){
+  // 因为只会执行一次无需消除影响
+}, {
+  // 排除偏好选项页
+  excludePath: '/preferences',
+});
+```
+关于分类的显示这里就不赘述了，去查看[示例主题风格](#示例主题风格Fantasy)的具体写法吧！
+
+---
+
+#### 消息类函数
+
+AnimeUI为主题系统共享了两种全局消息组件：对话框和消息条。
+分别由 `lzydialog​`, `lzynotice​` 控制产生，调用后将在界面上分别显示一个对话框和消息条。
+
+对话框和消息条的区别在于：通常消息条会自动消失、对话框视觉占用的强制性更高、对话框具有行为强迫性能强制使用者做出选择。
+
+目前的实现中，对话框未设定的情况下点击外部自动消失，消息条收到点击后立即消失。
+
+调用示例：
+```js
+$theme((utility, utils, { revoke })=>{
+  // 显示一个消息条，部分不需要的选项可以省略
+  utility.lzynotice({
+    onHidden: ()=>{console.log("notice is Hidden")},
+    position: 'center',
+    content: 'Lzynotice is successfully installed.',
+    semantic: utils.randomItem(['', 'warning', 'error', 'success', 'info']),
+  });
+  // 显示一个对话框，部分不需要的选项可以省略
+  utility.lzydialog({
+    onHidden: ()=>{console.log("Dialog is hidden")},
+    keepOuterClick: true,
+    position: 'center',
+    // View
+    title: "Test",
+    content: 'This my dialog string content',
+    semantic: utils.randomItem(['', 'warning', 'error', 'success', 'info']),
+    // actions
+    actions: [{
+      text: "确定",
+      action: ()=>{
+        console.log("Confirm button is clicked!")
+      },
+      // semantic: ''
+    },{
+      text: "取消",
+      action: ()=>{
+        console.log("Cancel button is clicked!")
+      }
+    }],
+  });
+});
+```
+
+#### 示例主题风格Fantasy
+
+`Fantasy`是伴随AnimeUI开发过程衍生的主题风格，也因此可能拥有最新的特性和稳定的表现。
+
+还是由于文档更新速度的问题，在开发主题风格时一些用法和实践可以尽管参考主题风格`Fantasy`
+
+如果你已经拷贝了WebUI，那么Fantasy主题位于WebUI的`themes/styles/fantasy`目录下
+
+Git仓库中的地址： [示例主题Fantasy](https://github.com/lozyue/AnimeSearcherUI/tree/main/AnimeUI/themes/styles/fantasy)
+
+
+## [API参考](api-config)
+
+## [主题风格特性](features)

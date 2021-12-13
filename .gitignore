@@ -1,8 +1,9 @@
-.DS_Store
 node_modules
-/dist
 
 # ignore until formal publishing.
+/dist
+.DS_Store
+docs
 *.zip
 *.txt
 

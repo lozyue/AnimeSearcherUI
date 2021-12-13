@@ -5,15 +5,15 @@
   "author": {
     "nick": "Lozyue",
     "avatar": "avatar.png",
-    "link": "http://github.com/lozyue"
+    "link": "https://github.com/lozyue/"
   },
-  "home": "http://github.com/lozyue/animesearcherui/#public/themes/fantasy",
+  "home": "https://github.com/lozyue/animesearcherui/#public/themes/fantasy",
   "thumbs": "/thumbs.jpg" ,
   "blending": {
     "onLight": "dew",
     "onDark": "dew-dark"
   },
-  "styles": ["/fantasy.css", "/override.css"],
-  "scripts": ["/main.js"],
+  "styles": ["/css/fantasy.css", "/css/override.css"],
+  "scripts": ["/js/main.js", "/js/quotation.js", "/js/background.js", "/js/decorations.js"],
   "async_script": false
 }

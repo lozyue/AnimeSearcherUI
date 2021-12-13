@@ -15,7 +15,7 @@ sidebarDepth: 2
 - Firefox 的修改设定方式如下：
 > Firefox 新建标签页 地址栏输入 about:config  
 > 点击接受风险并继续  
-> 搜索栏输入并找到: `privacy.file_unique_origin`  
+> 搜索栏输入并找到: `privacy.file_unique_origin`
 > 切换 值为 false 即可(无需刷新)  
 
 - Chrome 修改改设定需要添加启动参数: (以windows为例) 

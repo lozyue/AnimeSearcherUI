@@ -2,20 +2,28 @@
 
 This is the User Guidance Document of advance use.
 
-And you can find the utils and theme source in the `src` directory
+And you can find part of the source code about utils and themes respectively 
+in the `src` and `animeUI/themes` directory.
+
+Here is the online service available: [AnimeSearcher](https://zaxtyson.github.io/AnimeSearcher/) 
 
 
-## Project setup
+## Seek for more?
+
+See the Online Document: [AnimeUI深度食用手册](https://lozyue.github.io/AnimeSearcherUI/)
+
+
+## Adaptation
 ```
 yarn install
 ```
 
-### Compiles and hot-reloads for development
+### Document Development
 ```
 yarn serve
 ```
 
-### Compiles and minifies for production
+### Document Production
 ```
 yarn build
 ```
@@ -25,6 +33,11 @@ yarn build
 yarn test:unit
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Thanks
 
+Thanks for below Projects:
+
+- Vue
+- Vuetify
+- VuePress
+- Axios
