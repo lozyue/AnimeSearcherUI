@@ -1,0 +1,8 @@
+export default {
+      id: "icon-aui-player-usage",
+      viewBox: "0 0 154.7 158.51",
+      url: __webpack_public_path__ + "Z:\\WebDevelop\\lozyue\\AnimeUI\\src\\assets\\svg\\aui-player.svg",
+      toString: function () {
+        return this.url;
+      }
+    }
