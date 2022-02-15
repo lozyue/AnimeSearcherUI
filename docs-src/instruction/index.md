@@ -9,6 +9,11 @@ AnimeUI是由 HTML、JavaScript、CSS 打造的Web应用程序，
 浏览器兼容性参考: [浏览器兼容性参考](/features/index.html#browser-compatibility)
 :::
 
+友情链接:
+- [Firefox最新国际版](https://www.mozilla.org/zh-CN/firefox/all/#product-desktop-release)
+- [Chrome浏览器](https://www.google.cn/chrome/)
+
+
 ## 运行模式
 
 ### 部署HTTP/HTTPS服务方式
@@ -79,7 +84,7 @@ AnimeUI与API默认的通信接口需要进行修改。
 你可以通过修改浏览器设定并对WebUI JS代码作很简单的修改 或者改用 [HTTP/HTTPS部署方式](#部署http-https服务方式) 进行运行。
 
 WebUI JS代码部分修改:  
-打开UI全局配置文件 "/js/config.*.js" 并找到 `CHECKFILESOURCE` 将其值修改为 `false`(冒号后)
+打开UI全局载入配置文件 "/js/config.*.js" 并找到 `CHECKFILESOURCE` 将其值修改为 `false`(冒号后)
 
 修改浏览器设定可参考: [修改浏览器本地特殊同源设定](./helper.html#修改浏览器本地特殊同源设定)
 :::
@@ -128,6 +133,8 @@ WebUI JS代码部分修改:
 
 ::: warning Tips
 全局子主题 不具有继承特性，也即 `dark` 选项 在全局子主题中是无效的。
+
+同时，全局子主题也不具有运行时上下文，即依赖于当前主题风格对象的API将无法工作，比如`resolvePath`
 :::
 
 

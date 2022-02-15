@@ -1,7 +1,8 @@
 /**
- * Some const in development.
+ * Some const of development.
  */
 
+export const DocumentDefaultTitle = "AnimeSearcher"; // process.plugins.options.title;
 export const INFO = true;
 
 /**
@@ -29,4 +30,14 @@ export {
   TERMINATED,
 };
 
+// About git stars
+export const GitRepository = {
+  forks: 41,
+  stars: 373,
+  watch: 4,
+};
+
+// Environment Relatived Constant Variables
 export const DEBUG = process.env.NODE_ENV !== 'production';
+export const ProjectBasePath = process.env.BASE_URL;
+export const AnimeUIVersion = process.env.VUE_APP_VERSION;

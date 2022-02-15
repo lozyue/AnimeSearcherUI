@@ -1,11 +1,15 @@
-import { DEBUG } from './const';
 /**
  * Helper.js
  * Some helpful functions for Dom and Bom operation.
  */
 
-import { arbitraryFree, deepSupplement, is_Array, is_Defined, is_Function, objectSupplement, once, removeArrayItem } from './util';
-import { lyscrollTo } from './modules/lyscrollTo';
+import { DEBUG } from './const';
+import { 
+  arbitraryFree, deepSupplement, 
+  is_Array, is_Defined, is_Function, 
+  objectSupplement, once, removeArrayItem 
+} from './util';
+import { lyscrollTo } from './modules/lyscroll-to';
 
 
 export const toggleClass = function(ele: HTMLElement, className: string){
@@ -31,7 +35,7 @@ export const clickToAction = (function(mount:HTMLElement){
       func(event);
     });
   }, false); // on event bubbled.
-  return (invoke, remove = false)=>{
+  return (invoke: Function, remove = false)=>{
     if(remove) 
       removeArrayItem(invokeQueue, invoke);
     else invokeQueue.push(invoke);
@@ -47,15 +51,15 @@ export const clickToAction = (function(mount:HTMLElement){
  * @param mime Optional.
  * @param bom Optional
  */
-export function fileExport(data :unknown, filename :string, mime :string, bom) {
-  var blobData = (typeof bom !== 'undefined') ? [bom, data] : [data]
+export function fileExport(data :unknown, filename :string, mime :string, bom:unknown = null) {
+  var blobData = (is_Defined(bom) ? [bom, data] : [data]) as BlobPart[];
   var blob = new Blob(blobData, { type: mime || 'application/octet-stream' });
-  if (typeof window.navigator.msSaveBlob !== 'undefined') {
+  if (typeof (window.navigator as any).msSaveBlob !== 'undefined') {
     // IE workaround for "HTML7007: One or more blob URLs were
     // revoked by closing the blob for which they were created.
     // These URLs will no longer resolve as the data backing
     // the URL has been freed."
-    window.navigator.msSaveBlob(blob, filename);
+    (window.navigator as any).msSaveBlob(blob, filename);
   }
   else {
     var blobURL = (window.URL && window.URL.createObjectURL) ? window.URL.createObjectURL(blob) : window.webkitURL.createObjectURL(blob);
@@ -178,6 +182,7 @@ export function inject_style(text: string, url = '', props = {}, append = false)
   }
   else
     document.head.appendChild(newStyle);
+  return newStyle;
 }
 
 export function inject_script(text: string, url = '', props = {}, append = false) {
@@ -196,6 +201,7 @@ export function inject_script(text: string, url = '', props = {}, append = false
   }
   else
     document.body.appendChild(newScript);
+  return newScript;
 }
 
 /**
@@ -203,9 +209,12 @@ export function inject_script(text: string, url = '', props = {}, append = false
  *  And the passive modifier is setted to true on default.
  * @param $el The element to listening the scroll event.
  * @param scrollFunc The callback function.
- * @returns {Function} handle  For removeScrollListener; 
+ * @returns {Function} handle  For removeMouseScrollListener; 
  */
-export function addScrollListener($el: HTMLElement, scrollFunc: Function, onCatcheMode=false,passive=true,once=false) {
+type WrappedEvent = {
+  upward: Boolean,
+} & Event;
+export function addMouseScrollListener($el: Window|HTMLElement, scrollFunc: (eve:WrappedEvent)=>unknown, onCatcheMode=false, passive=true, once=false) {
   var wrapperHandle = (eve: Event) => {
     eve = eve || window.event;
     const eveCopper = eve as any;
@@ -220,21 +229,33 @@ export function addScrollListener($el: HTMLElement, scrollFunc: Function, onCatc
       else
         eve['upward'] = false;
     }
-    scrollFunc.call(this, eve);
+    scrollFunc.call(this, eve as WrappedEvent);
   };
   $el.addEventListener('DOMMouseScroll', wrapperHandle, {
-    capture: onCatcheMode,
+    capture: onCatcheMode, // 改为捕获方式传递，使盒子 wrap 层子元素得到响应。（最先触发事件都是wrap层）
     passive: passive, // If default true, meanwhile the prevent Default should be disabled.
     once: once,
-  }); // 改为捕获方式传递，使盒子 wrap 层子元素得到响应。（最先触发事件都是wrap层）
+  });
   ($el as any).onmousewheel = wrapperHandle;
-  return wrapperHandle;
+  return wrapperHandle; // This is the handler
 }
 
-export function removeScrollListener($el: HTMLElement, handle: any, onCatcheMode = false) {
+export function removeMouseScrollListener($el: Window|HTMLElement, handle: any, onCatcheMode = false) {
   $el.removeEventListener('DOMMouseScroll', handle, onCatcheMode);
 }
 
+export function addScrollListener($el: Window|HTMLElement, scrollFunc: (eve:Event)=>unknown, onCatcheMode=false, passive=true, once=false) {
+  $el.addEventListener('scroll', scrollFunc, {
+    capture: onCatcheMode, // 改为捕获方式传递，使盒子 wrap 层子元素得到响应。（最先触发事件都是wrap层）
+    passive: passive, // If default true, meanwhile the prevent Default should be disabled.
+    once: once,
+  });
+  return scrollFunc; // This is the handler
+}
+
+export function removeScrollListener($el: Window|HTMLElement, handle: any, onCatcheMode = false) {
+  $el.removeEventListener('scroll', handle, onCatcheMode);
+}
 /**
  * Fullscreen helper
  * Maybe to do :
@@ -346,7 +367,6 @@ export function multiClassAnimation(animeClasses: string|string[], target: HTMLE
 }
 
 
-
 /**
  * Document ready functions with compatibility.
  */
@@ -385,9 +405,9 @@ export var documentReady = (function () { // use js closure to return `whenReady
 })();
 
 // Preparation for `getEventDelegate` and `traceTopMatch`.
-const matchFunc = (target: HTMLElement|Node&ParentNode, matchPattern)=>{
+const matchFunc = (target: HTMLElement|Node&ParentNode, matchPattern: string|Function, ...params)=>{
   if(is_Function(matchPattern)){
-    return (matchPattern as Function)(target);
+    return (matchPattern as Function)(target, ...params);
   }
   else if(target["matches"])
     return (target as HTMLElement).matches(matchPattern as string);
@@ -399,7 +419,7 @@ const matchFunc = (target: HTMLElement|Node&ParentNode, matchPattern)=>{
 /**
  * The match multi situation at once.
  * This is the upgrated version of tranceTopMatch.
- *  Except of the uncustomizable `match` params.
+ *  Except of the uncustomizable `match` params. (can be only string)
  *  And the searchDepth cannot be appointed respectively.
  * That's for utility consideration. 
  *  You should apply it with suitable and optimismed Dom structures
@@ -416,7 +436,7 @@ export const traceMultiTopMatch = (targetEle: HTMLElement|Node&ParentNode, match
       matched = matchParcel[matchStr];
     }
     let tempElement = targetEle;
-    for(let i=0; (!maxSearchDepth || i<maxSearchDepth); i++){
+    for(let times=0; (!maxSearchDepth || times<maxSearchDepth); times++){
       if(matchFunc(tempElement, matchStr)){
         // no `this` pointer in invoke function.
         matched(tempElement as HTMLElement);
@@ -444,13 +464,15 @@ export const traceMultiTopMatch = (targetEle: HTMLElement|Node&ParentNode, match
 
 /**
  * Simply like the `getEventDelegate` function.
- * But it is a process which only cares target Element and won't keep the this pointer.
+ * But it is a process which only cares target Element and won't keep the pointer `this`.
  * Which is not provided by user.
  * Besides it has the return value.
+ * @param {number} maxSearchDepth The maximum limit times of trace search. 0 equal no limitation.
  * @returns {null | unknown} return the callback value. And default is null.
  */
-type MatchInvoke = (el:HTMLElement)=>any;
-export const traceTopMatch = (targetEle: HTMLElement|Node&ParentNode, invoke: MatchInvoke | [MatchInvoke, MatchInvoke], matchPattern: string | ((target: HTMLElement)=>Boolean), maxSearchDepth = 0)=>{
+type MatchInvoke = (el:HTMLElement)=>unknown;
+type MatchPattern = string | ((target: HTMLElement, times?: number)=>Boolean);
+export const traceTopMatch = (targetEle: HTMLElement|Node&ParentNode, invoke: MatchInvoke | [MatchInvoke, MatchInvoke], matchPattern: MatchPattern, maxSearchDepth = 0)=>{
   let matched, notMatched: null| MatchInvoke = null;
   if(is_Array (invoke)){
     [matched, notMatched] = invoke as [MatchInvoke, MatchInvoke];
@@ -458,18 +480,18 @@ export const traceTopMatch = (targetEle: HTMLElement|Node&ParentNode, invoke: Ma
     matched = invoke;
   }
 
-  for(let i=0; (!maxSearchDepth || i<maxSearchDepth); i++){
-    if(matchFunc(targetEle, matchPattern)){
+  for(let times=0; (!maxSearchDepth || times<maxSearchDepth); times++){
+    if(matchFunc(targetEle, matchPattern, times)){
       // no `this` pointer in invoke function.
       return matched(targetEle as HTMLElement);
     }
     // `this` is appointed to the wrapper Element. When it is in vue, this is the vue instances.
-    if(!targetEle.parentNode){
-      DEBUG && console.warn("[traceTopMatch]: The target Element has no parentNode. Search was terminated! \nLimit the maxSearchDepth can prevent and help with performance!", targetEle);
+    if(!targetEle.parentNode || targetEle.parentNode===document.body){
+      false && DEBUG && console.warn("[traceTopMatch]: The target Element has no parentNode. Search was terminated! \nLimit the maxSearchDepth can prevent this and help with performance!", targetEle);
       // invoke the not match
       return notMatched && notMatched(targetEle as HTMLElement);
     }
-    targetEle = targetEle.parentNode;
+    targetEle = targetEle.parentElement|| targetEle.parentNode;
   } // for loop end.
   // default failed！
   return notMatched && notMatched(targetEle as HTMLElement);
@@ -483,8 +505,8 @@ export const traceTopMatch = (targetEle: HTMLElement|Node&ParentNode, invoke: Ma
  * @param maxSearchDepth If target source of current Event is not matched, it will try to matched its parent.
  *  The iterate counts is setted by this param.
  */
-type WhenInvoke = (target: Event, el:HTMLElement)=>any;
-export function getEventDelegate(invoke: WhenInvoke | [WhenInvoke, WhenInvoke], matchPattern: string | ((target: HTMLElement)=>Boolean), maxSearchDepth = 0){
+type WhenInvoke = (target: Event, el:HTMLElement, ...params)=>unknown;
+export function getEventDelegate(invoke: WhenInvoke | [WhenInvoke, WhenInvoke], matchPattern: MatchPattern, maxSearchDepth = 0){
   let matched, notMatched: null| WhenInvoke = null;
   if(is_Array (invoke)){
     [matched, notMatched] = invoke as [WhenInvoke, WhenInvoke];
@@ -492,28 +514,28 @@ export function getEventDelegate(invoke: WhenInvoke | [WhenInvoke, WhenInvoke], 
     matched = invoke;
   }
   // Back an closure which could have the this pointer.
-  return function($event: Event){
+  return function($event: Event, ...params){
     // 兼容性处理
     var eve = $event || window.event;
     var targetEle: HTMLElement|Node&ParentNode = (eve.target || eve.srcElement) as HTMLElement;
 
-    for(let i=0; (!maxSearchDepth || i<maxSearchDepth); i++){
-      if(matchFunc(targetEle, matchPattern)){
+    for(let times=0; (!maxSearchDepth || times<maxSearchDepth); times++){
+      if(matchFunc(targetEle, matchPattern, times)){
         // The inner this is pointed to the matched targetEle.
         // invoke.call(targetEle, eve);
         // If it was used in vue, the this will pointed to the instance
-        return matched.call(this, eve, targetEle as HTMLElement);
+        return matched.call(this, eve, targetEle as HTMLElement, ...params);
       }
       // `this` is appointed to the wrapper Element. When it is in vue, this is the vue instances.
       if(!targetEle.parentNode || (this && (this===targetEle || this.el===targetEle ) ) ){
         DEBUG && console.warn("[getEventDelegate]: The target Element has no parentNode. Search was terminated! \nLimit the maxSearchDepth can prevent and help with performance!", targetEle);
         // invoke the not match
-        return notMatched && notMatched.call(this, eve, targetEle as HTMLElement);
+        return notMatched && notMatched.call(this, eve, targetEle as HTMLElement, ...params );
       }
       targetEle = targetEle.parentNode;
     } // for loop end.
     // when it has a collision to maxSearchDepth, it was failed with no return.
-    return notMatched && notMatched.call(this, eve, targetEle as HTMLElement);
+    return notMatched && notMatched.call(this, eve, targetEle as HTMLElement, ...params);
   }
 }
 
@@ -567,7 +589,7 @@ export function copyToClipboard_compatible(value: string) {
   input.setSelectionRange(0, input.value.length);
   if (document.execCommand('copy')) {
     document.execCommand('copy');
-    console.log('复制成功');
+    DEBUG && console.log('复制成功');
   }
   document.body.removeChild(input);
 }

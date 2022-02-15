@@ -72,8 +72,8 @@ AnimeUI的 主题系统(Theme-System) 包括 主题配色(Theme-Blending) 和 �
 对于名为`[name]`的主题配色，其入口JSON文件名为`entry.json`
 
 具体规则详见:
-- [创建主题风格](/theme-dev/style#创建主题风格)
-- [创建主题配色](/theme-dev/blending#创建主题配色)
+- [创建主题风格](style#创建主题风格)
+- [创建主题配色](blending#创建主题配色)
 
 ::: tip Tips
 本指北系列中的JSON文件配置的展示均照从根级开始的层级细粒度展示
@@ -87,20 +87,22 @@ JSON配置示例中可能会使用注释，
 
 ## 主题配色
 
-查看我们的[主题配色开发指北](/theme-dev/blending/)教程
+查看我们的[主题配色开发指北](blending/)教程
 
-附录：
-- [使用Sass开发](/theme-dev/blending/helper)教程
+<!-- 附录：
+- [使用Sass开发](style/helper)教程 -->
 
 <!-- - [主题配色特性说明]() -->
 
 
 ## 主题风格
 
-查看我们的[主题风格开发指北](/theme-dev/style/)教程
+查看我们的[主题风格开发指北](style/)教程
 
 附录：
-- [API参考](/theme-dev/style/api-config)
+- [使用Sass开发](style/helper)
 
-- [主题风格特性](/theme-dev/style/features)
+- [API参考](style/api-config)
+
+- [主题风格特性](style/features)
 

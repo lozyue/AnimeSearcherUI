@@ -4,6 +4,102 @@
  */
 
 import { DEBUG } from './const';
+import { getCasualMode, CasualMode } from './modules/casual-list';
+
+
+/**
+ * Just assign the item in target which is defined in source.
+ * Not deep mode.
+ * @param {*} source 
+ * @param {*} target 
+ */
+export function objectRefresh<R extends Object, T extends Object> (source: R, target: T|null) {
+  if(!is_Object(target) ) return source;
+  
+  let current: unknown = null;
+  for (let item in source) {
+    current = (target as unknown as R)[item];
+    // // Set origin data as null to disable refresh?
+    // if (is_Defined(source[item]) && current!==void 0){
+    if (current!==void 0){
+      source[item] = (target as unknown as R)[item];
+    }
+  }
+  return source;
+}
+
+/**
+ * Deep type of objectRefresh source to target.
+ * @param target
+ * @param source
+ */
+ export function deepRefresh(...objs:Array<Object>){
+  let merged; 
+  objs.reduce((source, target)=>{
+    if(!is_Object(target) ) return source;
+
+    for(let item in source){
+      if(target[item]!==void 0) {
+        if(is_PlainObject(source[item]) && is_PlainObject(target[item])){
+          deepRefresh(source[item], target[item]);
+        }else{
+          source[item] = target[item];
+        }
+      }
+    }
+    merged = source;
+    return source;
+  }, objs[0]); // The third param is to set default value.
+  return merged;
+}
+
+
+/**
+ * Heigh Efficiency Array contact (Changes were made on the long Array)
+ * Fits data of thousands scale.
+ * @param {Array<T>} arrOne 
+ * @param {Array<S>} arrTwo 
+ * @returns Contacted Array. (The Ref from one of the source Array)
+ */
+ export const mergeArray = <T,S>(arrOne: Array<T>, arrTwo: Array<S>)=>{
+  let Destiny, Obsolete;
+  if(arrOne.length < arrTwo.length){
+    Destiny = arrTwo;
+    Obsolete = arrOne;
+  } else {
+    Destiny = arrOne;
+    Obsolete = arrTwo;
+  }
+  const originLen = Destiny.length-1;
+  const targetLen = originLen+Obsolete.length;
+  for(let i = originLen; i<targetLen; i++){
+    Destiny[i] = Obsolete[i];
+  }
+  return Destiny as Array<T|S>;
+}
+
+
+/**
+ * Randomly return a item from the source Array.
+ * @param arr 
+ */
+export const randomItem = <T>(arr:T[])=>{
+  return arr[~~(Math.random()*arr.length)];
+};
+
+/**
+ * Fisher-Yates Shuffles.
+ * Make the Array changed.
+ * @param source 
+ * @param objPathes 
+ */
+export const arrayShuffle = <T>(arr:Array<T>)=>{
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = ~~(Math.random()* (i + 1) );
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
 
 /**
  * Get the target curve path value of the source Object.
@@ -11,16 +107,16 @@ import { DEBUG } from './const';
  * @param source 
  * @param objPathes 
  */
-export function curveGet(source: Object, objPathes: string[]){
-  let interim = source, item = '';
+export function curveGet(source: Object, objPathes: (string|number)[]){
+  let interim = source, item;
   for(let index=0; index<objPathes.length; index++){
     item = objPathes[index];
-    interim = interim[item]
+    interim = interim && interim[item]
     if(interim === void 0 ){
       return void 0;
     };
   }
-  return interim;
+  return interim as unknown | undefined;
 }
 
 /**
@@ -31,32 +127,37 @@ export function curveGet(source: Object, objPathes: string[]){
  * @param {unknown|Function} value The value assign for the curve object target. Support callback that if target value is a function you should set it in call back.
  * @returns { number|true } The number indicator the failed position of the conflict path.
  */
-export function curveSet(source: Object, objPathes: string[], value: unknown|((item: Object, name: string)=>any) = null){
-  let interim = source, item = '';
-  for(let index=0; index<objPathes.length; index++){
+export function curveSet(source: Object, objPathes: (string|number)[], value: ((target: Object, name: string)=>any)| unknown= null){
+  let interim = source, item;
+  // not the last one.
+  let index=0;
+  for(; index<objPathes.length-1; index++){
     item = objPathes[index];
     // existed.
-    if(interim[item] ){
-      if(is_PlainObject(interim[item])){
+    if(is_Defined(interim[item]) ){
+      if(is_Object(interim[item])){
         interim = interim[item];
-      // Unexpected non-object value.
+      // Refined Array path.
+      // } else if(is_Array(interim[item])){
+      //   interim = interim[parseInt(item)];
       } else {
+        // Unexpected non-object value.
         return index;
       }
-    // non existed and not the last
-    } else if(index+1< objPathes.length){
+    // non existed.
+    } else 
       interim = interim[item] = {};
-    // the last
-    } else {
-      // assign the value.
-      if(is_Function(value))
-        (value as Function)(interim, item);
-      else
-        interim[item] = value;
-    }
   };
+  // the last
+  item = objPathes[index];
+  // assign the value.
+  if(is_Function(value))
+    (value as Function)(interim, item);
+  else
+    interim[item] = value;
   return true;
 }
+
 
 /**
  * Get the pretty date Object of particular time.
@@ -74,6 +175,61 @@ export const getPrettyTime = (...particularTime:unknown[])=>{
     second: nowTime.getSeconds(),
   }
 };
+
+export const dateFormatter = function(formatter:string, time = new Date() ) {
+  // Match consistent letters
+  return formatter.replace(/([a-z]+)/ig, function ($1) {
+    var temp: number|string = '';
+    switch($1){
+      case "yyyy": 
+        temp = time.getFullYear();
+        break;
+      case "yy": 
+        temp = ("" + time.getFullYear()).slice(-2);
+        break;
+      case "M": 
+        temp = time.getMonth() + 1;
+        break;
+      case "MM": 
+        temp = ("0" + (time.getMonth() + 1)).slice(-2);
+        break;
+      case "d": 
+        temp = time.getDate();
+        break;
+      case "dd": 
+        temp = ("0" + time.getDate()).slice(-2);
+        break;
+      case "H": 
+        temp = time.getHours();
+        break;
+      case "HH": 
+        temp = ("0" + time.getHours()).slice(-2);
+        break;
+      case "h": 
+        temp = time.getHours() % 12;
+        break;
+      case "hh": 
+        temp = ("0" + time.getHours() % 12).slice(-2);
+        break;
+      case "m": 
+        temp = time.getMinutes();
+        break;
+      case "mm": 
+        temp = ("0" + time.getMinutes()).slice(-2);
+        break;
+      case "s": 
+        temp = time.getSeconds();
+        break;
+      case "ss": 
+        temp = ("0" + time.getSeconds()).slice(-2);
+        break;
+      case "w": 
+        temp = ['日', '一', '二', '三', '四', '五', '六'][time.getDay()];
+        break;
+    }
+    return (temp+'');
+  });
+}
 
 /**
  * Deep Object.assign source to target.
@@ -103,15 +259,16 @@ export function deepAssign(...objs:Array<Object>){
  * @param {*} target 
  * @param {*} supplement 
  */
-export function objectSupplement(target: Object, supplement: Object) {
-  let current = null;
+export function objectSupplement<R extends Object, T extends Object> (target: R|null, supplement: T) {
+  if(!target) return supplement;
+  let current: unknown = null;
   for (let item in supplement) {
-    current = target[item];
+    current = (target as unknown as T)[item];
     if (is_Defined(current))
       continue;
-    target[item] = supplement[item];
+    (target as unknown as T)[item] = supplement[item];
   }
-  return target;
+  return target as (R & T);
 }
 
 /**
@@ -121,20 +278,20 @@ export function objectSupplement(target: Object, supplement: Object) {
  * @param {*} target 
  * @param {*} supplement 
  */
-export function deepSupplement(target: Object|null, supplement: Object) {
-  let current :null | Object= null;
+export function deepSupplement<R extends Object, T extends Object> (target: R|null, supplement: T) {
   if(!target) return supplement;
+  let current: unknown = null;
   for (let item in supplement) {
-    current = target[item];
+    current = (target as unknown as T)[item];
     if (is_Defined(current)) {
-      if (!is_PlainObject(current)) continue;
-      deepSupplement(current, supplement[item]); // The `current` is a reference which could be assigned.
+      if (!is_PlainObject(current as Object)) continue;
+      deepSupplement(current as Object, supplement[item]); // The `current` is a reference which could be assigned.
     }
     else
       // current = supplement[item];
-      target[item] = supplement[item];
+      (target as unknown as T)[item] = supplement[item];
   }
-  return target;
+  return target as (R & T);
 }
 
 /**
@@ -243,17 +400,34 @@ export function once<T extends (...args: [unknown])=>ReturnType<T> > (func: T): 
 
 /**
  * Simple deepClone with optional Function clone
+ * @param val 
+ * @param substituteObj The substitute Object for contact the value while disconnect the reference.
+ * @param options
  */
-export function deepClone(val: any, substituteObj :Object = Object.create(null), cloneFunc: Function|Boolean = true) {
+type DeepCloneOptions = {
+  cloneFunc: Boolean, // false,
+  unpackArray: Boolean, // false,
+  substituteObj: Object,
+};
+export function deepClone(val: any, options: Partial<DeepCloneOptions>= {}) {
   if (is_Array(val)) {
-    return val.slice()
-  } else if(cloneFunc && is_Function(val)){
+    let interim = val.slice();
+    if(options.unpackArray){
+      const len = interim.length;
+      for(let index=0; index<len; index++){
+        interim[index] = deepClone(interim[index], objectSupplement({
+          substituteObj: Object.create(null),
+        }, options));
+      }
+    }
+    return interim;
+  } else if(options.cloneFunc && is_Function(val)){
     return Object.create(val.prototype).constructor;
   } else if(val instanceof Date){
     return new Date().setTime(val.getTime());
   // lag to improve performance.
   } else if (is_PlainObject(val)) {
-    var res = substituteObj;
+    var res = options.substituteObj || Object.create(null);
     for (var key in val) {
       res[key] = deepClone(val[key]);
     }
@@ -282,7 +456,7 @@ export function arbitraryFree<T> (input: Array<T>|T, func: (a:T, b:number)=>any)
  * Wrap the stuff with inputs, accepting Array or Non-Array input. 
  * A list of arguments with truth check for condition logical supplement. 
  * Amend on 2021-10-07: Add chief reference protection of the wrappered input.
- *  !!! Warning: The later stuffs will loose its reference. 
+ *  !!! Warning: The later stuffs will lost its reference. 
  * @param  {...any} inputs 
  * @returns { Array } returns the wrapped array.
  */
@@ -310,7 +484,7 @@ export function arbitraryWrap<T> (...inputs: Array<Array<T>|T>): Array<T>{
  * @param len 
  * @param value 
  */
-export var creatArray = <T>(len:number, value:T|null = null):Array<T> => {
+export var createArray = <T>(len:number, value:T|null = null):Array<T> => {
   let initArr = new Array(len); // 初始化轨道 
   // 初始化成轨道为空数组
   if( (Array as any).fill)
@@ -321,15 +495,47 @@ export var creatArray = <T>(len:number, value:T|null = null):Array<T> => {
 }
 
 /*
- * Delete the Item in an Array, returning the new Array.
+ * Delete the Item in an Array, returning the removed item.
  */
 export var removeArrayItem = <T>(arr:Array<T>, item:T)=>{
   if (arr.length) { 
     let index = arr.indexOf(item); 
     if (index > -1) { 
-      return arr.splice(index, 1); 
+      return arr.splice(index, 1)[0]; 
     } 
   } 
+  return void 0;
+}
+
+/**
+ * Move the item in array from raw index to any available target Index.
+ * @param arr 
+ * @param rawIndex 
+ * @param targetIndex 
+ * @returns The raw ref of the array.
+ */
+export var moveArrayItem = <T>(arr:T[], rawIndex: number, targetIndex: number)=>{
+  const len = arr.length;
+  // Check
+  rawIndex = (rawIndex + len)% len;
+  targetIndex = Math.abs( (targetIndex + len)% len );
+
+  const item = arr[rawIndex];
+  const isBehind = rawIndex <= targetIndex;
+  let index=rawIndex;
+  if(isBehind){
+    for(; index!==targetIndex; index++){
+      // move
+      arr[index] = arr[index+1];
+    }
+  } else {
+    for(; index!==targetIndex; index--){
+      // move
+      arr[index] = arr[index-1];
+    }
+  }
+  arr[index] = item;
+  return arr;
 }
 
 /**
@@ -338,8 +544,6 @@ export var removeArrayItem = <T>(arr:Array<T>, item:T)=>{
  */
 export var is_Number = (value :any)=>{
   return value!=='' && value!=null && !isNaN(value);
-  // let is_weakType = (value==1) || (value==0);
-  // return !(is_weakType) || (value===1 || value ===0);
 }
 
 /**
@@ -350,22 +554,23 @@ export var toTrueArray:(a:{[propName:number]: any})=>Array<any> = (arraySimilar_
   return Array.prototype.slice.call(arraySimilar_Object);
 }
 
-export const is_Defined = (v: any):Boolean => (v !== undefined && v !== null);
-export const is_Array = (obj: unknown):Boolean => (Array.isArray && Array.isArray(obj) || (typeof obj === 'object') && (obj as Object).constructor == Array);
+export const is_Defined = (v: unknown):Boolean => (v !== undefined && v !== null);
+export const is_Array = (obj: unknown):Boolean => (Array.isArray && Array.isArray(obj) || obj instanceof Array || (typeof obj === 'object') && Object.prototype.toString.call(obj).slice(-6,-1)=== 'Array' );
 export const is_String = (str: Object):Boolean => ((typeof str === 'string') && str.constructor == String);
-export const is_Function = (obj: unknown):Boolean => (obj instanceof Function || (obj as Object)?.constructor == Function );
-export const is_PlainObject = (obj: null|Object):Boolean => (Object.prototype.toString.call(obj) === '[object Object]');
+export const is_Function = (obj: unknown):Boolean => (obj instanceof Function);
+export const is_Object = (obj: unknown):Boolean => (obj!==null &&(obj instanceof Object || typeof obj === "object"));
+export const is_PlainObject = (obj: unknown):Boolean => (Object.prototype.toString.call(obj) === '[object Object]');
 export const is_RegExp = (obj: Object):Boolean => (obj.constructor === RegExp);
-export const is_Promise = (val: any):Boolean => {
+export const is_Promise = (val: unknown):Boolean => {
   return (
     is_Defined(val) &&
-    typeof val.then === "function" &&
-    typeof val.catch === "function"
+    typeof (val as Object)["then"] === "function" &&
+    typeof (val as Object)["catch"] === "function"
   );
 };
 
-// whether the value is of primitive or not
-export const isPrimitive = (value: any):Boolean => {
+// whether the value is of primitive or not (not a reference type)
+export const is_Primitive = (value: any):Boolean => {
   return (
     typeof value === "string" ||
     typeof value === "number" ||
@@ -392,4 +597,8 @@ export const is_Empty = (val: unknown)=>{
   }else{
     return !Object.keys((val) as Object).length;
   }
+}
+
+export {
+  getCasualMode, CasualMode,
 }

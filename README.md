@@ -1,6 +1,6 @@
 # AnimeUI Document with part of source.
 
-This is the User Guidance Document of advance use.
+This is the User Guidance Document of senior use.
 
 And you can find part of the source code about utils and themes respectively 
 in the `src` and `animeUI/themes` directory.
@@ -35,9 +35,9 @@ yarn test:unit
 
 ## Thanks
 
-Thanks for below Projects:
+Thanks for below open source projects:
 
-- Vue
-- Vuetify
-- VuePress
-- Axios
+- [Vue](https://github.com/vuejs/vue/)
+- [Vuetify](https://github.com/vuetifyjs/vuetify/)
+- [VuePress](https://github.com/vuejs/vuepress/)
+- [Axios](https://github.com/axios/axios)
