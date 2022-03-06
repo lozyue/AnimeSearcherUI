@@ -17,10 +17,11 @@ $theme 能保证你添加的功能函数在恰当的时机执行，
 通过指定页面匹配规则，让主题风格的功能增强就像修改传统多页应用一样简单。
 并在恰当的时机清除副作用。
 
-不严谨的TS类型参考: 
+不严谨的TS类型参考:
+
 ```ts
 // $theme 函数原型
-type $theme(
+function $theme(
   // First param to invoke (or say inject impact). Do your jobs here!
   invoke: Calling, 
   // Second param to revoke the side-effection of previously invoke.
@@ -30,9 +31,9 @@ type $theme(
 ): any;
 
 // Type declares in ts.
-type CallBack = (a: Utility, b: Utils, enhance: Enhance)=>unknown;
+function CallBack(a: Utility, b: Utils, enhance: Enhance): unknown;
 // "revoke" is refers to the prototype of revoke Function.
-type Calling = (a: Utility, b: Utils, enhance: Enhance & { revoke:(typeof revoke) })=>unknown; 
+function Calling(a: Utility, b: Utils, enhance: Enhance & { revoke:(typeof revoke) }): unknown; 
 interface Options {
   path?: string | string[] | RegExp | RegExp[], // default '', means match all.
   excludePath?: string | string[] | RegExp | RegExp[], // default [], means excludes none.
@@ -144,6 +145,7 @@ Utility对象即是所谓的主题风格API功能库，其中包含了多个高�
   // AuiPlayer Related
   "addPlayerHotkey",
   "auiplayer", "auiplayerDepthSet",
+  "addToPlaylist", "addPlaylist", // 添加到播放列表 / 添加整个播放列表
   // Events API
   "_on", "_off",
   "_once", "_isHappened",
@@ -163,7 +165,7 @@ Utility对象即是所谓的主题风格API功能库，其中包含了多个高�
 选项见TS定义:
 
 ```ts
-type lzynotice = (options: Partial<Alert>)=>unkown;
+function lzynotice(options: Partial<Alert>): unkown;
 
 type Alert = {
   // Behavior
@@ -188,7 +190,7 @@ type Semantic = 'info'|'success'|'warning'|'error';
 选项见TS定义:
 
 ```ts
-type lzydialog = (options: Partial<PopUp>)=>unkown;
+function lzydialog(options: Partial<PopUp>): unkown;
 
 type PopUp = {
   // Behavior
@@ -261,7 +263,7 @@ utility.registerShortcut(options);
 要检查该快捷键是否存在，可以调用`lookupShortcut`传递该名称进行检查。
 
 ```ts
-function unregisterShortcut(name: string, remain=true){}
+function unregisterShortcut(name: string, remain=true): undefined
 // remain indicate the behavior is just disable this shortcut or delete all of its infos.
 ```
 
@@ -275,7 +277,7 @@ utility.registerShortcut("toBottom");
 
 通过名称检查快捷键是否存在，不存在则返回`null`, 存在返回该快捷键的描述对象。
 ```ts
-function lookupShortcut(name: string=''){}
+function lookupShortcut(name: string=''): undefined
 ```
 
 > 快捷键存在不一定为当前激活状态，当前激活状态可由查询出来的快捷键对象的`enable`属性描述。
@@ -354,6 +356,72 @@ $theme(function(utility, utils, { revoke }){
 })
 ```
 
+### addToPlaylist
+
+添加一个播放项目到播放列表。
+
+第一个参数指定要添加的项目或项目列表。
+第二个参数指定要添加到的列表索引，缺省则添加到当前选中列表。
+
+```ts
+function addToPlaylist(listItems: PlayListItem[]| PlayListItem, index: number): undefined
+
+type PlayListItem = {
+  name: string,
+  src: string,
+  quality: Array<PlayQuality>| null,
+  // Extensible.
+  type?: AuiPlayerSupportType,
+  thumb?: string,
+  danmaku?: DLPlayerDanmaku,
+  [key: string]: unknown,
+}
+type PlayQuality = {
+  caption: string, // The quality description like '1080P', '720P' 
+  src: string,
+  type?: AuiPlayerSupportType, // The helper type pointer of video MSE type. Default is auto. 
+  // Extensible.
+  [key: string]: unknown,
+}
+type DLPlayerDanmaku = {
+  address: string, // main url
+  addition?: string[], // Append danmu url list to merge.
+  id?: number,
+  token?: string,
+  maximum?: number,
+}
+type AuiPlayerSupportType = 'auto'| 'normal'| 'hls'| 'flv'| 'dash'| 'webtorrent';
+```
+
+### addPlaylist
+
+添加一个播放列表。第二个参数可指定是否禁用导入提示。
+
+返回添加成功的列表的索引。
+
+```ts
+function addPlaylist(rawData: Partial<AuiPlayerMeta>, silent=false): number
+
+type AuiPlayerMeta = {
+  title: string, // The Drama headline title
+  list_title: string, // The origin play_list title.
+  playList: Array<PlayListItem>,
+  infos: {
+    cover: string, // URL string
+    tags: string[], // Video category tag.
+    desc: string, // Description
+  },
+  playing: {
+    danmakuSearch?: string, // For current drama danmaku Search.
+    pointer?: number, // The history play of current playing in playList; -1 to set non pointer.
+    time?: number, // The currentTime of point target video.
+  },
+  // Extensible.
+  [key: string]: unknown,
+};
+// The internal type definition has been mentioned above↑.(#addToPlaylist) 
+```
+
 
 ## Utils
 
@@ -368,24 +436,26 @@ $theme(function(utility, utils, { revoke }){
 [
   // 类型判断
   "is_Empty", "is_Defined", 
-  "is_Number", "is_Array", "is_String", "is_Function", "is_RegExp", 
+  "is_Number", "is_Object", "is_Array", "is_String", "is_Function", "is_RegExp", 
   "is_PlainObject", "is_Promise", "is_Primitive",
   // 对象操作
   "curveGet", "curveSet",
   "deepAssign",
   "objectSupplement", "deepSupplement",
   "deepClone",
+  "objectRefresh", "deepRefresh",
   // 数组操作
-  "creatArray", "mergeArray", "toTrueArray",
+  "createArray", "mergeArray", "toTrueArray",
   "removeArrayItem", "moveArrayItem",
   "arrayShuffle", 
-  // 其他
+  "randomItem",
+  // 函数工厂
   "getExportMethod",
   "throttle", "debounce", "throttBounce",
   "once",
   "getSingleton",
-  "arbitraryFree",
-  "arbitraryWrap",
+  // 其他
+  "arbitraryFree", "arbitraryWrap",
   "toggleClass",
   "clickToAction",
   "fileExport",
@@ -393,12 +463,11 @@ $theme(function(utility, utils, { revoke }){
   "getHashPath",
   "getCurrentAddress",
   "isFileProtocol",
-  "inject_style",
-  "inject_script",
-  "addScrollListener",
-  "removeScrollListener",
-  "toggle_fullscreen",
+  "inject_style", "inject_script",
+  "addScrollListener", "removeScrollListener",
+  "addMouseScrollListener", "removeMouseScrollListener",
   "onceClassAnimation",
+  "toggle_fullscreen",
   "multiClassAnimation",
   "documentReady",
   "traceMultiTopMatch",
@@ -408,11 +477,33 @@ $theme(function(utility, utils, { revoke }){
   "copyTextToClipboard",
   "copyToClipboard",
   "copyToClipboard_compatible",
-  "getPrettyTime",
+  "dateFormatter", "getPrettyTime",
   "CONSTS",
   "lyscrollTo",
+  "getCasualMode", "CasualMode",
+removeInDeposit
 ]
 ```
+
+### lyscrollTo
+
+灵活的控制页面滚动操作的函数，支持横向纵向滚动与自定义滚动timing-function。
+
+AnimeUI中几乎所有平滑滚动都由其提供支持。
+
+```ts
+function lyscrollTo(options: Partial<ScrollOptions>): undefined;
+type ScrollOptions = {
+  top: number, left: number, // Set absolute destination.
+  offsetTop: number, offsetLeft: number, // Set relative scroll offset
+  duration: number, // The scroll duration Time.
+  target: null| HTMLElement, // Specified scroll target Element.(that the top & left will be noneffective)
+  scrollBox: HTMLElement, // The scroll container Element
+  easeTiming: null| ((t: number)=>number ), // Timing function.
+  highlight: Boolean | HTMLElement, // To highlight the target.
+};
+```
+
 
 ## Events
 

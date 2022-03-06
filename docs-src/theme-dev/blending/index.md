@@ -63,7 +63,12 @@ AnimeUI的主题配色系统在全局上对配色做了划分
 
 > 顺带提及：配色系统的原理就是利用配色变量生成相应的CSS变量和类。
 
-在主题配色中包括 配色变量 和 颜色变量 两部分
+在主题配色中包括 配色变量、颜色变量以及修饰变量 三部分。
+不管是哪一部分，目前关于颜色的配置值只支持使用十六进制表示。
+
+你可以使用浏览器自带的颜色值表达式转换将颜色值转换为HEX模式（按住shift点击色块）
+或者使用主题配色调色板工具进行颜色选择或者颜色转换等。
+
 
 ### 配色变量
 
@@ -165,6 +170,30 @@ background 指示整体背景颜色， 而 surface 指示显示在背景上的�
   },
 }
 ```
+
+## 修饰变量
+
+修饰变量的内容也对应于Blending JSON 配置文件中的 "colors" 选项。
+
+主要用于如透明度、边框等样式的修饰等。
+
+```json
+{
+  "layer-opacity": 0.75, // for layer opacity
+  "layer-darken": 0.75, // for lower down the brightness. // decide by light and darkmode.
+  "layer-sm-radius": "3px", // border-radius
+  "layer-md-radius": "5px", // for label
+  "layer-lg-radius": "10px", // for card
+  "disabled-opacity": 0.38,
+  "activated-opacity": 0.16,
+  "idle-opacity": 0.04,
+  "hover-opacity": 0.12,
+  "focus-opacity": 0.12,
+  "border-color": "#000000",
+  "border-opacity": 0.12,
+}
+```
+
 
 ### Dark 选项
 

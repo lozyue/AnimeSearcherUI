@@ -11,6 +11,6 @@ features:
 - title: 性能超高
   details: 以最快的速度加载主题和配置，并按路由进行调配，享受单页应用无缝刷新的同时让主题开发又像多页面一样简单！
 - title: 高效调配
-  details: AnimeUI 为主题系统提供了一系列高度封装的API，并共享了内置辅助静态函数，让定制主题变得轻而易举！
+  details: AnimeUI 为主题系统提供了一系列高度封装的API，并共享了内置辅助静态函数，让定制变得轻而易举！
 footer: MIT Licensed | Copyright © 2021 Lozyue
 ---

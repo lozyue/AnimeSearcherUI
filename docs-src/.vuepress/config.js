@@ -1,5 +1,5 @@
 module.exports = {
-  title: '主题系统 - AnimeUI',
+  title: '食用指南 - AnimeUI',
   description: 'Just playing around',
 
   base: '/AnimeSearcherUI/',
