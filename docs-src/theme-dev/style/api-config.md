@@ -122,19 +122,16 @@ Utility对象即是所谓的主题风格API功能库，其中包含了多个高�
 可用方法列表：(Add Annotation / todo...)
 ```js
 [
-  "addQuotations",
-  "setCategory",
-
-  "isBlendingDark",
   "addThemeOptions",
+  "addQuotations", "setCategory",
+  "isBlendingDark",
   "resolvePath",
   "setBackground",
   "addAdorement",
   "removeAdorement",
   // Notification API
   "lzydialog",
-  "lzynotice",
-  "clearNotice",
+  "lzynotice", "clearNotice",
   "addNotifycation",
   // For shortcut (namely hotkey)
   "alterShortcut",
@@ -287,21 +284,24 @@ function lookupShortcut(name: string=''): undefined
 
 ### auiplayer
 
-该方法接受一个回调，回调的第一个参数将传递当前AuiPlayer所包含的DLPlayer实例对象，
-用于方便直接对播放器进行操作。
+该方法用于作用域穿透，以提供操控播放器及播放等的各种接口方法。
+
+接受一个回调，回调包含两个参数，回调的第一个参数将传递当前AuiPlayer所包含的DLPlayer实例对象，
+用于方便直接对播放器进行操作。第二个参数是auiplayer补充方法对象，在不同的页面实例可能包含的方法不同。
 
 该方法仅在 Aui-Player 初始化后销毁前存在且可用。
-请使用"auiplayer-mounted"事件来判断, 具体用法可到下面参考。
-
-> DLPlayer由DPlayer创改而来，其实例大部分API仍然和DPlayer相同, 当前可参考[dplayer文档](http://dplayer.js.org/guide.html)
+请使用"auiplayer-mounted"事件来判断, 具体用法可到下面参考，
+该事件通常仅在"/anime/details/", "/aui-player"页面下发生。
 
 核心部分示例:
 ```js
 function customPlayer(){
-  utility.auiplayer(function(dlplayer)=>{
-    dlplayer.seek(5*60); // 跳转至5分钟位置
-    dlplayer.volume(0); // 静音 
-    dlplayer.speed(2.5); // 2.5倍速播放
+  utility.auiplayer( function(dlplayer, auiplayer){
+    dlplayer.seek(2*60); // 跳转至2分钟位置
+    auiplayer.mute(); // 切换静音 
+    const shiftBack = auiplayer.speedShift(3); // 向上提速3挡播放(不超过+0.75)
+
+    console.log(dlplayer, auiplayer); // 打印出来具体查看
   });
 }
 if(utility._isHappened("auiplayer-mounted") ) customPlayer();
@@ -310,6 +310,61 @@ utility._on("auiplayer-mounted", customPlayer);
 revoke(()=>{
   utility._off("auiplayer-mounted", customPlayer);
 });
+```
+
+> dlplayer对象是DLPlayer的实例。DLPlayer由[DPlayer](https://github.com/DIYgod/DPlayer)创改而来，其实例大部分API仍然和DPlayer相同, 当前可参考[dplayer文档](http://dplayer.js.org/guide.html)
+> auiplayer对象是对DLPlayer实例的进一步补充，包含对列表播放、弹幕调控等一系列操作方法。
+
+#### 回调参数auiplayer包含方法：
+
+```ts
+// 加载指定index的播放列表的播放数据
+function loadListData(listID: number): boolean;
+// 加载指定index的播放列表的播放信息
+function toggleMetaList(listID: number): undefined;
+// 播放当前载入的播放列表中指定index的视频
+function toggleVideo(index: number): undefined;
+// 清空并载入弹幕
+function applyDanmu(options: DLPlayerDanmaku);
+// 保持原有弹幕并装载新弹幕
+function contactDanmu(options: DanmuContact);
+// 调节播放器弹幕样式, 目前支持弹幕偏移时间、字体大小、速度、行间距
+function danmuStyle(options: Partial<DanmuBulletStyle>);
+// 切换弹幕显示与隐藏
+function toggleDanmu();
+// 切换播放倍速档位(一档大概为0.25)。返回成功变化的档位值的相反数，可用于恢复倍速
+function speedShift(delta: number): number;
+// 切换静音与恢复
+function mute();
+// 聚焦播放器，需要传递一个(点击)事件
+function focusIt($eve: Event);
+
+type DanmuBulletStyle = {
+  offsetTime: number, // OffsetTime
+  scrollSpeed: number, // The duration of scrolling danmu speed(per second).
+  fontsize: string, // a valid CSS fontSize Expression.
+  fixedDuration: number, // The duration of top danmu bullet and bottom danmu bullet(per second).
+  orbitGap: number,
+};
+type DLPlayerDanmaku = {
+  address: string, // url, allow Empty stirng to disable danmu.
+  addition?: string[], // Append danmu bullet url list.
+  id?: number,
+  token?: string,
+  maximum?: number,
+}
+type DanmuContact = {
+  addition: string[],
+  bullets: Bullet[], // The danmu bullet list of danmu Object.
+}
+type Bullet = {
+  text: string,
+  time: number,
+  type: number, // 0:`right`, 1:`top`, 2:`bottom`; default: `right`
+  // Decorations
+  color?: text,
+  border?: string,
+}
 ```
 
 ### addPlayerHotkey
@@ -324,7 +379,7 @@ revoke(()=>{
 如果已经初始化完成直接调用`addPlayerHotkey`添加快捷键即可，
 如果没有则添加监听到该事件发生：`_on("auiplayer-mounted", callback)` ,同时也要记得取消监听 `_off("auiplayer-mounted")` 
 
-一个来自Fantas主题的完整使用示例模板如下，其功能是按'A'视频播放向前空降90s :
+一个来自 Fantasy 主题的完整使用示例模板如下，其功能是按'A'视频播放向前空降90s :
 ```js
 $theme(function(utility, utils, { revoke }){
   const options = {
@@ -454,15 +509,17 @@ type AuiPlayerMeta = {
   "throttle", "debounce", "throttBounce",
   "once",
   "getSingleton",
+  // URL操作相关
+  "getHashPath", "getURLQueries", "addURLModifier",
+  "getCurrentAddress", "getHostName",
+  "isFileProtocol",
   // 其他
   "arbitraryFree", "arbitraryWrap",
   "toggleClass",
   "clickToAction",
   "fileExport",
-  "boundRectReset",
-  "getHashPath",
-  "getCurrentAddress",
-  "isFileProtocol",
+  "isInIframe",
+  "getBoundRect",
   "inject_style", "inject_script",
   "addScrollListener", "removeScrollListener",
   "addMouseScrollListener", "removeMouseScrollListener",
@@ -470,8 +527,7 @@ type AuiPlayerMeta = {
   "toggle_fullscreen",
   "multiClassAnimation",
   "documentReady",
-  "traceMultiTopMatch",
-  "traceTopMatch",
+  "traceTopMatch", "traceMultiTopMatch",
   "getEventDelegate",
   "copyInterceptor",
   "copyTextToClipboard",

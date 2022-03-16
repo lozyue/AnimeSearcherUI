@@ -24,7 +24,7 @@ sidebarDepth: 2
 > 重启chrome以完成  
 
 附图:  
-![Chrome添加启动参数示例](/assets/images/add-file-access.jpg "Chrome添加启动参数")
+![Chrome添加启动参数示例]($withBase/assets/images/add-file-access.jpg)
 
 ::: danger 注意:
 **修改该设定需要自行承担微小可能的文件被碰撞窃取的风险！**

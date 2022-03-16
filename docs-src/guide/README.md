@@ -19,7 +19,7 @@
 
 初来乍到？先从这里开始吧！
 
-See: [导航](/Guide)
+See: [导航](/Guide/)
 
 
 ## 部署和使用指南
@@ -28,7 +28,9 @@ See: [导航](/Guide)
 
 See: [部署和使用指南](/instruction/).
 
-- [Helper 通用帮助](/instruction/helper)
+通用帮助(修改浏览器配置)：
+
+- [Helper 通用帮助](/instruction/helper/)
 
 
 ## 主题开发与高级定制

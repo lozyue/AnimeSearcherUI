@@ -14,8 +14,8 @@
 | Firefox     | 86+    | 滚动条样式定制无效; |
 | Edge        | 86+    | 副作用同Chrome |
 | IE          | 11+    | 或许大部分功能运作但体验缺失;限定严格模式的跨域策略; |
-| Safari      | 15+    | 平滑滚动等细节部分缺失 |
-| IOS_Safari  | 14.5+  | 限定严格模式的跨域策略; |
+| Safari      | 15+    | 平滑滚动等细节部分缺失; 原生支持HEVC/h265媒体 |
+| IOS_Safari  | 14.5+  | 限定严格模式的跨域策略; 原生支持HEVC/h265媒体 |
 | Samsung     | 13+    | （缺乏测试） |
 | Opera       | 77+    | （缺乏测试） |
 
@@ -48,7 +48,7 @@ AnimeUI的沉浸模式基于特定事件的全局监听，每个周期进行一�
 
 ### 播放器功能支持情况
 
-PC端：（支持度由Lozyue按理想完成度 0-5 给出自评）
+AuiPlayer：（支持度由Lozyue按理想完成度 0-5 给出自评）
 | 功能项 |   描述   | 支持度 |
 | ------ | ---------------- | -------- |
 | 视频播放 | 基本播放，MP4及各种流类型视频 | 4 |
@@ -62,6 +62,54 @@ PC端：（支持度由Lozyue按理想完成度 0-5 给出自评）
 
 由于开发时间有限，播放器未有进行进一步的重构优化，未进行足够的移动端适配。
 
+### MSE支持
+
+除了浏览器本身支持的播放格式外，AuiPlayer导入了hls, dash, flv, webtorrent以尽可能的支持更多的媒体格式。
+
+其中只有hls默认预加载提供对m3u8等的流媒体格式提供支持。
+其余没有默认加载的MSE支持要在播放时手动指定type为相应格式以激活自动加载，否则将提示不支持。
+
+如果需要修改默认MSE支持请到全局配置文件`config.*.js`中寻找`AuiConfig.AuiPlayer`配置项，默认配置如下
+```js
+// config.*.js
+AuiConfig = {
+  AuiPlayer: {
+    hls: true, // Default
+    flv: false,
+    webtorrent: false,
+    dash: false,
+  }
+  ...
+}
+```
+
+### 播放器嵌入
+
+从v2.0-alpha2版本开始，AuiPlayer支持被嵌入到其他网页作为网页播放器了。
+
+嵌入方式为部署网站地址+AuiPlayer页面地址(`/aui-player`)。
+
+进入AuiPlayer页面可以在底部的测试示例中展开找到相应的iframe测试代码。
+
+```html
+<iframe src="https://zaxtyson.github.io/AnimeSearcher/#/aui-player?src=https%3A%2F%2Fapi.dogecloud.com%2Fplayer%2Fget.mp4%3Fvcode%3D5ac682e6f8231991%26userId%3D17%26ext%3D.mp4&name=%E5%85%89%E3%82%8B%E3%81%AA%E3%82%89%20-%20Goose%20house&danmu=https%3A%2F%2Fs-sh-17-dplayercdn.oss.dogecdn.com%2F1678963.json?style=default" allow="fullscreen" width="720px" height="480px" frameborder="0"></iframe>
+```
+
+![Iframe测试效果]($withBase/assets/images/iframe-test.png)
+
+支持的URL播放控制参数有: 
+
+| 参数值 |   描述   | 补充 |
+| ------ | ---------------- | -------- |
+| name | 播放视频名称，用于显示以及弹幕匹配 | 仅AuiPlayer有效 |
+| src | 视频播放源链接 | 仅AuiPlayer有效 |
+| type | 视频播放类型, 同 AuiPlayer 支持的类型 | 仅AuiPlayer有效 |
+| danmu | 指定弹幕播放链接 | 仅AuiPlayer有效 |
+| title | 视频集标题， | 仅AuiPlayer有效 |
+| webfull | 设定为true以启用dlplayer初始占满页面 | 仅AuiPlayer有效 |
+| innerDanmaku | 是否启用内置弹幕，传递`false`以禁用自动弹幕匹配 | 多处有效 |
+
+> *多处有效指用到以AuiPlayer核心组件为基础的页面播放器，如Anime分区播放器*
 
 
 ## 配置相关
@@ -94,7 +142,17 @@ PC端：（支持度由Lozyue按理想完成度 0-5 给出自评）
 see: [修改系统设定](./####)
 :::
 
+
 ## 主题系统相关
+
+主题的切换除了在应用内各处主题模块点击外，还可以在应用初始化时通过指定URL参数来指定一次主题。
+
+```text
+https://zaxtyson.github.io/AnimeSearcher/#/aui-player?style=default&blending=dew
+```
+如上URL中末尾参数使用`style=default`指定了主题风格为"default", 使用`blending=dew`指定了主题配色为"dew", 
+其拼接规则遵循URL拼接规则，你可以使用`utils.addURLModifier`方法或者调用`encodeURIComponent`手动拼接路由参数。
+
 
 目前的主题系统还非常不完善，处于初期阶段。
 

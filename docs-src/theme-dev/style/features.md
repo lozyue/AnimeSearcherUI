@@ -55,13 +55,14 @@ $ThemeRoot: themes/styles/mytheme;
 
 这里记录在使用主题风格API系统的过程中可能碰的不同的报错记录及原因：
 
-> TypeError: source[methodName] is undefined
+> <font color="red">TypeError: source[methodName] is undefined</font>
 
 可能的原因：
 - 主题导出API `utility` 下的方法不存在而调用失败
 
+---
 
-> Uncaught SyntaxError: redeclaration of [const/let] xxx
+> <font color="red">Uncaught SyntaxError: redeclaration of [const/let] xxx</font>
 
 可能的原因：
 - 在主题风格script编写中声明了全局 let 变量或者常量，这将在主题被重复切换到之时产生错误
@@ -81,6 +82,9 @@ $theme(function(){
   // Draw codes here!
 });
 ```
+
+---
+
 
 ## 开发模式规范
 

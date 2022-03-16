@@ -142,6 +142,7 @@ export function curveSet(source: Object, objPathes: (string|number)[], value: ((
       //   interim = interim[parseInt(item)];
       } else {
         // Unexpected non-object value.
+        DEBUG&& console.warn("[curveSet]: Unexpected non-object value of path:", item);
         return index;
       }
     // non existed.

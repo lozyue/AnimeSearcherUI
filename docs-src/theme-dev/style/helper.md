@@ -115,7 +115,7 @@ npm install -D postcss postcss-cli autoprefixer
 嵌套能很好的展现层级关系，同时节省一些代码量。
 同时嵌套的每一级中也同时兼容各种选择器。
 
-并且可以使用
+并且可以使用`&`来代替父节点自身选择器，以便于将一些需要嵌套铺平开来使样式更整洁等。
 
 ```scss
 nav {
@@ -139,6 +139,10 @@ nav {
   }
 }
 ```
+
+上面的 `&:hover` 就代替了 `li:hover`，将hover属性和子路径放在了`li`下的同一级。
+对于这条规则，scss解析后的结果为：`nav ul li:hover{background: lightblue}`。
+
 
 ### Variable 变量
 

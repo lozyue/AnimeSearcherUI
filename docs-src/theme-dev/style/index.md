@@ -43,7 +43,7 @@ Theme-Style 允许你使用JavaScript 和 CSS来对主题进行更改
 一个主题风格就是一个位于 `/themes/styles/` 下的一个文件夹资源。
 主题风格的入口是 `entry.json` 文件，该JSON文件的通常结构如下：
 
-主题风格默认 JSON 模板: (实例中JSON不允许带注释，可以用AnimeUI的主题开发页面(/development/styles)去除)
+主题风格默认 JSON 模板: (实例中JSON不允许带注释，可以用AnimeUI的主题开发页面`/dev/style`去除)
 ```json
 {
   "name": "", // 主题唯一标识名称 不宜过长 请尽可能保持与主题文件夹名称相同
@@ -96,13 +96,14 @@ Theme-Style 允许你使用JavaScript 和 CSS来对主题进行更改
 由于暂时无力开发专用于主题风格编写的环境，故主题风格的开发调试直接在应用程序上进行。
 开发效果的更新只能手动重载（目前来说...其实就是刷新）
 
-在进行主题风格Script的编写前，可以将 AnimeUI 的全局配置文件中把 `AuiTheme.ThemeStyle.StrictScriptLoad` 选项改为`false`.
-以便于开发时定位相应文件。
+在进行主题风格Script的编写前，先到 AnimeUI 的全局配置文件中做一些准备工作: 
+- 把 `AuiConfig.AuiTheme.ThemeStyle.StrictScriptLoad` 选项改为`false`, 以便于开发时定位相应文件。
+- 修改 `AuiConfig.Modules.ServiceWorker` 选项值为`false`, 禁用ServiceWork所带来的缓存干扰。
 
 ::: tip
-全局配置文件为 config.*.js, 在`/js/`目录下。(\*代替hash值)
+全局配置文件为 config.*.js, 在`/js/`目录下。(\*代替hash标识值)
 
-如果关闭了`AuiTheme.ThemeStyle.StrictScriptLoad`，请不要过快的切换主题风格，
+如果设定了`AuiTheme.ThemeStyle.StrictScriptLoad`为`false`，请不要过快的切换主题风格，
 有微小的可能导致一些诡异的现象。
 :::
 
@@ -143,7 +144,7 @@ $theme(function(utility, utils){
   // Clear Effection. Restore its original shortcut.
   utility.resetShortcut('goSearch');
 }, {
-  path: ['/aui-player', '/anime/', '/tvlive'],
+  path: ['/anime/'],
 });
 ```
 
@@ -263,7 +264,7 @@ $theme(function(utility, utils){
     rawValue: ()=>{
       return "https://tva1.sinaimg.cn/large/005BYqpgly1frn9445odej31hc0u0kjl.jpg";
     },
-    // rawValue: "https://tva1.sinaimg.cn/large/005BYqpgly1frn9445odej31hc0u0kjl.jpg" // this also valid
+    // rawValue: "https://tva1.sinaimg.cn/large/005BYqpgly1frn9445odej31hc0u0kjl.jpg" // this's also valid
     /**
       * The onChange options will be automaticly called when the settings change. 
       * @param {*} nVal The new value of changes.
@@ -397,7 +398,7 @@ $theme((utility, utils, { revoke })=>{
 });
 ```
 
-## 更多
+## Links(链接)
 
 了解了主题风格及其功能库的基本使用后，是不是还没过瘾，想自由发挥更多内容？
 

@@ -10,7 +10,13 @@ import {
   objectSupplement, once, removeArrayItem 
 } from './util';
 import { lyscrollTo } from './modules/lyscroll-to';
+import { unstrip } from './manipulate';
 
+export const isInIframe = function(){
+  return (window.frames.length !== parent.frames.length)
+    || (self.frameElement && self.frameElement.tagName === "IFRAME")
+    || ( (top && self) && top.location !== window.location && top!==self)
+}
 
 export const toggleClass = function(ele: HTMLElement, className: string){
   if(ele.classList.toggle){
@@ -90,14 +96,14 @@ export function fileExport(data :unknown, filename :string, mime :string, bom:un
 /**
  * Return a closure function to get the justified element boundingClientRect with high performance.
  * Usage:
- *   var rectRest = boundRectReset(); // initialize. Get the closure.
- *   var rectValue = rectRest(); // Get an object. Every time reset the window.
- * simplely, you can only do calling the `rectRest` function. The `rectValue` which is called by reference will be auto updated.  
+ *   var rectRest = getBoundRect(); // initialize. Get the closure.
+ *   var rectObj = rectRest(); // Get an object. Every time reset the window.
+ * simplely, you can only do calling the `rectRest(true)` function. The `rectValue` which is called by reference will be auto updated.  
  */
-export var boundRectReset: () => Function = function () {
+export var getBoundRect = function ($el: HTMLElement) {
   var boundingRect = Object.create(null);
-  return ($el: HTMLElement, useCache = false) => {
-    if (!useCache) {
+  return (preventCache = false) => {
+    if (preventCache) {
       // Object.assign(boundingRect, $el.getBoundingClientRect()); // Object.keys($el.getBoundingClientRect()) => {}
       let clientRect = $el.getBoundingClientRect();
       for (let key in clientRect) {
@@ -108,6 +114,89 @@ export var boundRectReset: () => Function = function () {
     return boundingRect;
   }
 };
+
+
+/**
+ * To connect URL query Object to the specified URL.
+ * @param { string } url 
+ * @param { Object } paramObj
+ * @returns { string }
+ */
+export const addURLModifier = (url: string, paramObj: Object)=>{
+  let params = '', index = 0;
+  for(let item in paramObj){
+    if(paramObj[item]===null|| paramObj[item]==='') continue;
+
+    if(index!==0){
+      params += '&';
+    }
+    params += `${encodeURIComponent(item)}=${encodeURIComponent(paramObj[item])}`;
+
+    index++;
+  }
+  const questionPosi = url.lastIndexOf("?");
+  const slashPosi = url.lastIndexOf("/");
+
+  if(!params.length) return url; // raw
+  if(questionPosi > slashPosi){
+    // end with '?'
+    if(questionPosi===url.length - 1) 
+      return url + params; 
+    return unstrip(url, '&', 2) + params;
+  }
+  // Not include ?
+  else{
+    return url + '?' + params;
+  }
+}
+DEBUG&& (window["addURLModifier"] = addURLModifier);
+
+
+/**
+ * Get the host name of specific URL
+ * @param target 
+ * @returns 
+ */
+export function getHostName(target = document.URL, withPrefix=false){
+  let index = target.indexOf("://");
+  if(index>-1)
+    target = target.slice(index+3);
+  else return target;
+
+  index = target.indexOf("/");
+  if(index>-1){
+    target = target.slice(0, index);
+  } else return target;
+
+  if(withPrefix) return target;
+  index = target.indexOf(".");
+  if(index>-1)
+    target = target.slice(index+ 1);
+  return target;
+}
+
+/**
+ * Parse the target URL and return its query as key-value Object
+ * @param { string } url
+ */
+export function getURLQueries(url: string){
+  // Split
+  url = url.slice( url.lastIndexOf("/") );
+  let check = url.indexOf("?") + 1;
+  if(check <= 0) return null;
+  url = url.slice( check );
+  const queriesList = url.split("&");
+
+  const queries = {};
+  queriesList.map((item)=>{
+    const itemCheck = item.indexOf("=");
+    if(itemCheck < 0) return;
+    let key = item.slice(0, itemCheck);
+    if(!key) return;
+    queries[key] = decodeURIComponent(item.slice(itemCheck+1) );
+  });
+  return queries as any;
+}
 
 /**
  * Get the hash path of current URL
@@ -122,7 +211,7 @@ export function getHashPath(target = document.URL, withQuery = true){
   if (valid > -1){
     // if find, sub next the find. or return the raw string.
     const subIfFindLast = (target, search)=>{
-      return target.substr( (target.lastIndexOf(search)+ target.length+1)% target.length );
+      return target.slice( (target.lastIndexOf(search)+ target.length+1)% target.length );
     }
     if(!withQuery){
       // not completely. ignored the current path.
@@ -131,7 +220,7 @@ export function getHashPath(target = document.URL, withQuery = true){
       path = target.substring(valid + 1, queryStart + 1 + (target.length - subToLastSlash.length));
     }
     else{
-      path = target.substr(valid + 1);
+      path = target.slice(valid + 1);
     }
   }
   return path;
@@ -146,7 +235,7 @@ export const getCurrentAddress = ()=>{
   const loc = window.location;
   let start = loc.href.lastIndexOf(loc.host + loc.pathname);
   if(start<0) return '';
-  return loc.href.substr(0, start + loc.host.length + loc.pathname.length);
+  return loc.href.slice(0, start + loc.host.length + loc.pathname.length - 1);
 }
 
 /**
