@@ -134,6 +134,8 @@ export const addURLModifier = (url: string, paramObj: Object)=>{
 
     index++;
   }
+  // Encode URL
+  url = encodeURI(url);
   const questionPosi = url.lastIndexOf("?");
   const slashPosi = url.lastIndexOf("/");
 
@@ -300,6 +302,10 @@ export function inject_script(text: string, url = '', props = {}, append = false
  * @param scrollFunc The callback function.
  * @returns {Function} handle  For removeMouseScrollListener; 
  */
+const WheelSupport = "onwheel" in document.createElement("div") ? "wheel" : // Modern browser
+document.onmousewheel !== undefined ? "mousewheel" : // Webkit、IE
+  "DOMMouseScroll" // Old Version of firefox.
+;
 type WrappedEvent = {
   upward: Boolean,
 } & Event;
@@ -307,7 +313,13 @@ export function addMouseScrollListener($el: Window|HTMLElement, scrollFunc: (eve
   var wrapperHandle = (eve: Event) => {
     eve = eve || window.event;
     const eveCopper = eve as any;
-    if (eveCopper.wheelDelta) {
+    if(eveCopper.deltaY){
+      if(eveCopper.deltaY > 0)
+        eve['upward'] = false;
+      else
+        eve['upward'] = true; // add a property.
+    }
+    else if (eveCopper.wheelDelta) {
       if (eveCopper.wheelDelta > 0)
         eve['upward'] = true; // add a property.
       else
@@ -318,9 +330,9 @@ export function addMouseScrollListener($el: Window|HTMLElement, scrollFunc: (eve
       else
         eve['upward'] = false;
     }
-    scrollFunc.call(this, eve as WrappedEvent);
+    return scrollFunc.call(this, eve as WrappedEvent);
   };
-  $el.addEventListener('DOMMouseScroll', wrapperHandle, {
+  $el.addEventListener(WheelSupport, wrapperHandle, {
     capture: onCatcheMode, // 改为捕获方式传递，使盒子 wrap 层子元素得到响应。（最先触发事件都是wrap层）
     passive: passive, // If default true, meanwhile the prevent Default should be disabled.
     once: once,
@@ -330,7 +342,8 @@ export function addMouseScrollListener($el: Window|HTMLElement, scrollFunc: (eve
 }
 
 export function removeMouseScrollListener($el: Window|HTMLElement, handle: any, onCatcheMode = false) {
-  $el.removeEventListener('DOMMouseScroll', handle, onCatcheMode);
+  $el.removeEventListener(WheelSupport, handle, onCatcheMode);
+  $el["onmousewheel"] = null;
 }
 
 export function addScrollListener($el: Window|HTMLElement, scrollFunc: (eve:Event)=>unknown, onCatcheMode=false, passive=true, once=false) {

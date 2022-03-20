@@ -189,12 +189,15 @@ export function countDown(options: Partial<CountDownOptions>){
     action(count, ()=>{
       clearTimeout(handle);
     });
-    if(count === 0){
+
+    if(count <= 0){
+      clearTimeout(handle);
       done();
     }else
       handle = setTimeout(repeat, basement);
   }
-  let handle = setTimeout(repeat, basement);
+  let handle = 0;
+  repeat();
 }
 
 

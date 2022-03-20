@@ -99,17 +99,18 @@ AuiConfig = {
 
 支持的URL播放控制参数有: 
 
-| 参数值 |   描述   | 补充 |
+| 参数名 |   描述   | 补充 |
 | ------ | ---------------- | -------- |
-| name | 播放视频名称，用于显示以及弹幕匹配 | 仅AuiPlayer有效 |
-| src | 视频播放源链接 | 仅AuiPlayer有效 |
-| type | 视频播放类型, 同 AuiPlayer 支持的类型 | 仅AuiPlayer有效 |
-| danmu | 指定弹幕播放链接 | 仅AuiPlayer有效 |
-| title | 视频集标题， | 仅AuiPlayer有效 |
-| webfull | 设定为true以启用dlplayer初始占满页面 | 仅AuiPlayer有效 |
+| name | 播放视频名称，用于显示以及弹幕匹配 | AuiPlayer初始化时有效 |
+| src | 视频播放源链接 | AuiPlayer初始化时有效 |
+| type | 视频播放类型, 同 AuiPlayer 支持的类型 | AuiPlayer初始化时有效 |
+| danmu | 指定弹幕播放链接 | AuiPlayer初始化时有效 |
+| title | 视频集标题， | AuiPlayer初始化时有效 |
+| webfull | 设定为true以启用dlplayer初始占满页面 | AuiPlayer初始化时有效 |
 | innerDanmaku | 是否启用内置弹幕，传递`false`以禁用自动弹幕匹配 | 多处有效 |
+| order | 指定当前播放列表的播放排序, 0|false=>原序, 1|true=>顺序排序, 2=>逆序排序, 3=>原序逆序 | 多处有效 |
 
-> *多处有效指用到以AuiPlayer核心组件为基础的页面播放器，如Anime分区播放器*
+> *多处有效指用到以AuiPlayer核心组件为基础的播放器的页面初始化时有效，如Anime分区播放器*
 
 
 ## 配置相关
@@ -152,6 +153,11 @@ https://zaxtyson.github.io/AnimeSearcher/#/aui-player?style=default&blending=dew
 ```
 如上URL中末尾参数使用`style=default`指定了主题风格为"default", 使用`blending=dew`指定了主题配色为"dew", 
 其拼接规则遵循URL拼接规则，你可以使用`utils.addURLModifier`方法或者调用`encodeURIComponent`手动拼接路由参数。
+
+| 参数名 |   描述   | 补充 |
+| ------ | ---------------- | -------- |
+| style | 通过主题风格名称指定启动时的主题风格 | 仅全局初始化有效 |
+| blending | 通过主题风格名称指定启动时的主题风格 | 仅全局初始化时有效 |
 
 
 目前的主题系统还非常不完善，处于初期阶段。

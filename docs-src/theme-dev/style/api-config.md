@@ -65,21 +65,22 @@ type GlobalConstructors = {
 示例:
 ```js
 $theme(function(utility, utils, Ehance){
-  const { getVue, getRouter, getRoute } = Ehance;
+  const { getVue, getRouter, getRoute, revoke } = Ehance;
   // 引入任何Vue3 Hook，支持Template编译
   const { createApp, ref, reactive } = getVue();
   const $router = getRouter();
   const $route = getRoute();
 
-  // 打印route
+  // 打印 $route 查看当前页面路由信息
   console.log($route);
-  // 调用 $router.push 导航路由
-  const waiting = $router.push("/navigator"); 
+  // 调用 $router.push 导航路由 跳转到起始页
+  const waiting = $router.push("/navigator"); // Get a Promise
   
   // 预先创建节点
-  const div = document.createElement("div");
-  div.innerHTML=`
-    <div id="counter">
+  var appDiv = document.createElement("div");
+  appDiv.setAttribute("id", "my-app"); // 设置id供Vue挂载实例
+  appDiv.innerHTML=`
+    <div class="counter">
       Counter: {{ counter }}
     </div>
   `;
@@ -98,8 +99,15 @@ $theme(function(utility, utils, Ehance){
     }
   }
   waiting.then(()=>{
-    document.querySelector(".main").appendChild(div);
-    const myapp = createApp(Counter).mount('#counter');
+    // 预先添加节点
+    document.querySelector(".main").appendChild(appDiv);
+    // 构造Vue实例并挂载
+    const VueApp = createApp(Counter).mount('#my-app');
+    // 使用hook方式消除产生的影响
+    revoke(()=>{
+      VueApp.unmount(); // 卸载vue实例
+      appDiv.remove(); // 移除加入的节点
+    });
   });
 });
 ```
@@ -172,7 +180,7 @@ type Alert = {
   // View
   content: string, // Support HTML-Text !
   semantic: Semantic, // Type of the display
-  duration: number, // range(0,1-9); An integer multiplying power of 500 ms. Set 0 to wait until user touch it.
+  duration: number, // range(0, 1-10); An integer multiplying power of 500 ms. Set 0 to wait until user touch it.
   // actions, For advace content Match like lzy.
   onMatched: (el: HTMLElement)=>unknown, // Match susscess 
   onMissed: (el: HTMLElement)=>unknown, // Match failed
@@ -289,10 +297,6 @@ function lookupShortcut(name: string=''): undefined
 接受一个回调，回调包含两个参数，回调的第一个参数将传递当前AuiPlayer所包含的DLPlayer实例对象，
 用于方便直接对播放器进行操作。第二个参数是auiplayer补充方法对象，在不同的页面实例可能包含的方法不同。
 
-该方法仅在 Aui-Player 初始化后销毁前存在且可用。
-请使用"auiplayer-mounted"事件来判断, 具体用法可到下面参考，
-该事件通常仅在"/anime/details/", "/aui-player"页面下发生。
-
 核心部分示例:
 ```js
 function customPlayer(){
@@ -304,12 +308,6 @@ function customPlayer(){
     console.log(dlplayer, auiplayer); // 打印出来具体查看
   });
 }
-if(utility._isHappened("auiplayer-mounted") ) customPlayer();
-utility._on("auiplayer-mounted", customPlayer);
-// remove the impact
-revoke(()=>{
-  utility._off("auiplayer-mounted", customPlayer);
-});
 ```
 
 > dlplayer对象是DLPlayer的实例。DLPlayer由[DPlayer](https://github.com/DIYgod/DPlayer)创改而来，其实例大部分API仍然和DPlayer相同, 当前可参考[dplayer文档](http://dplayer.js.org/guide.html)
@@ -322,7 +320,7 @@ revoke(()=>{
 function loadListData(listID: number): boolean;
 // 加载指定index的播放列表的播放信息
 function toggleMetaList(listID: number): undefined;
-// 播放当前载入的播放列表中指定index的视频
+// 播放当前载入的播放列表中指定index(初始Index)的视频
 function toggleVideo(index: number): undefined;
 // 清空并载入弹幕
 function applyDanmu(options: DLPlayerDanmaku);
@@ -399,15 +397,11 @@ $theme(function(utility, utils, { revoke }){
   function addIt(){
     utility.addPlayerHotkey(options);
   }
-  // Invoke on correct chance.
-  if(utility._isHappened("auiplayer-mounted") ) addIt();
-  utility._on("auiplayer-mounted", addIt);
-  // remove the impact
-  revoke(()=>{
-    utility._off("auiplayer-mounted", addIt);
-  });
 }, function(){}, {
-  path: ['/aui-player', '/anime/details/'], // Pages have supported player.
+  path: [ // Pages have supported player.
+    '/aui-player', 
+    /anime\/details\/\w+/, // Support RegExp
+  ],
 })
 ```
 
@@ -429,6 +423,7 @@ type PlayListItem = {
   type?: AuiPlayerSupportType,
   thumb?: string,
   danmaku?: DLPlayerDanmaku,
+  subtitle?: string| DLPlayerSubtitle, // .vvt type subtitle
   [key: string]: unknown,
 }
 type PlayQuality = {
@@ -439,13 +434,18 @@ type PlayQuality = {
   [key: string]: unknown,
 }
 type DLPlayerDanmaku = {
-  address: string, // main url
+  address: string, // main url. DPlayer/DLPlayer API type.
   addition?: string[], // Append danmu url list to merge.
   id?: number,
   token?: string,
   maximum?: number,
 }
 type AuiPlayerSupportType = 'auto'| 'normal'| 'hls'| 'flv'| 'dash'| 'webtorrent';
+
+type DLPlayerSubtitle = {
+  url: string, // the .vvt type sutitle source URL. Accept empty string.
+  [key: string]: string, // Extensible CSS Style property.
+};
 ```
 
 ### addPlaylist

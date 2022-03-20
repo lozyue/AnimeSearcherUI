@@ -8,7 +8,7 @@ import { getCasualMode, CasualMode } from './modules/casual-list';
 
 
 /**
- * Just assign the item in target which is defined in source.
+ * Assign the target item whose key has been defined in the source.
  * Not deep mode.
  * @param {*} source 
  * @param {*} target 
@@ -557,11 +557,11 @@ export var toTrueArray:(a:{[propName:number]: any})=>Array<any> = (arraySimilar_
 
 export const is_Defined = (v: unknown):Boolean => (v !== undefined && v !== null);
 export const is_Array = (obj: unknown):Boolean => (Array.isArray && Array.isArray(obj) || obj instanceof Array || (typeof obj === 'object') && Object.prototype.toString.call(obj).slice(-6,-1)=== 'Array' );
-export const is_String = (str: Object):Boolean => ((typeof str === 'string') && str.constructor == String);
+export const is_String = (str: unknown):Boolean => ((typeof str === 'string') && str.constructor == String);
 export const is_Function = (obj: unknown):Boolean => (obj instanceof Function);
 export const is_Object = (obj: unknown):Boolean => (obj!==null &&(obj instanceof Object || typeof obj === "object"));
 export const is_PlainObject = (obj: unknown):Boolean => (Object.prototype.toString.call(obj) === '[object Object]');
-export const is_RegExp = (obj: Object):Boolean => (obj.constructor === RegExp);
+export const is_RegExp = (obj: unknown):Boolean => (!!obj && (<Object>obj).constructor === RegExp);
 export const is_Promise = (val: unknown):Boolean => {
   return (
     is_Defined(val) &&
