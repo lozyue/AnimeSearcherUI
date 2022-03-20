@@ -6,6 +6,7 @@ node_modules
 docs
 *.zip
 *.txt
+.github
 
 # local env files
 .env.local
