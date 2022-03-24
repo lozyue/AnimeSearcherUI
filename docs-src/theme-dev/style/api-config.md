@@ -330,6 +330,8 @@ function contactDanmu(options: DanmuContact);
 function danmuStyle(options: Partial<DanmuBulletStyle>);
 // 切换弹幕显示与隐藏
 function toggleDanmu();
+// 载入vtt字幕亦或调整字幕CSS样式
+function applySubtitle(options: Partial<DLPlayerSubtitle>); 
 // 切换播放倍速档位(一档大概为0.25)。返回成功变化的档位值的相反数，可用于恢复倍速
 function speedShift(delta: number): number;
 // 切换静音与恢复
@@ -359,10 +361,16 @@ type Bullet = {
   text: string,
   time: number,
   type: number, // 0:`right`, 1:`top`, 2:`bottom`; default: `right`
-  // Decorations
-  color?: text,
-  border?: string,
+  // Optional Decorations
+  color?: number, // Use a number to represent the Hex color. like: orange=>0xffa500, and in decimal it's 16753920
+  border?: string, // CSS style property string.
 }
+
+type DLPlayerSubtitle = {
+  url: string, // the .vvt type sutitle source URL. Accept empty string.
+  [key: string]: string, // Extensible CSS Style property.
+};
+
 ```
 
 ### addPlayerHotkey
