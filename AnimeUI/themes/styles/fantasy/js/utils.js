@@ -2,12 +2,12 @@
  * To add some public function to share with others
  *   via utils Object.
  */
-(function(){
+ (function(){
   
   $theme((utility, utils)=>{
     // Share the function by the name of "XML_toObj"
     utils["XML_danmu"] = XML_danmu;
-  }, ()=>{
+  }, (utility, utils)=>{
     // remove it when the theme uninstall.
     utils["XML_danmu"] = undefined;
   });

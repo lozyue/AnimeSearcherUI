@@ -1,7 +1,7 @@
 // 始终以主题名为类名起头
 .fantasy{
-  // 匹配页面 /aui-player
-  #aui-player{
+  // 匹配页面 /aui-player, /anime/details
+  #aui-player, #details{
     // 主体内容节点
     .main{
       #fantasy-danmu{
