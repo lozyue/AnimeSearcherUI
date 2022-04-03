@@ -332,8 +332,13 @@ function danmuStyle(options: Partial<DanmuBulletStyle>);
 function toggleDanmu();
 // 载入vtt字幕亦或调整字幕CSS样式
 function applySubtitle(options: Partial<DLPlayerSubtitle>); 
-// 切换播放倍速档位(一档大概为0.25)。返回成功变化的档位值的相反数，可用于恢复倍速
-function speedShift(delta: number): number;
+/**
+ * 切换播放倍速按档位的方式
+ * @param delta 要切换的档位整数值, 正值提升速度，负值降低速度(一档大概为0.25)
+ * @param baseline 指定基于基础速度多少来调整，默认不设定则基于当前播放速度. 指定范围(0.25*n, n=1,2,3...20)
+ * @return { number } 返回基于base所成功调整的档位变化值的相反数用于恢复先前倍速。
+ */
+function speedShift(delta: number, baseline?: number): number;
 // 切换静音与恢复
 function mute();
 // 聚焦播放器，需要传递一个(点击)事件

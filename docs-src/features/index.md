@@ -66,10 +66,12 @@ AuiPlayer：（支持度由Lozyue按理想完成度 0-5 给出自评）
 
 除了浏览器本身支持的播放格式外，AuiPlayer导入了hls, dash, flv, webtorrent以尽可能的支持更多的媒体格式。
 
-其中只有hls默认预加载提供对m3u8等的流媒体格式提供支持。
-其余没有默认加载的MSE支持要在播放时手动指定type为相应格式以激活自动加载，否则将提示不支持。
+为保证播放器加载速度，其中只有hls进行了默认预加载以提供对常见的m3u8等流媒体格式的支持。
+其余没有默认加载的MSE支持可在播放时手动指定type为相应格式以激活自动加载，否则将提示不支持。
 
-如果需要修改默认MSE支持请到全局配置文件`config.*.js`中寻找`AuiConfig.AuiPlayer`配置项，默认配置如下
+已经加载的MSE类型媒体将自动添加进auto识别模式，后续播放媒体可指定type为auto。
+
+如果需要修改默认额外MSE支持加载设定请到全局配置文件`config.*.js`中寻找`AuiConfig.AuiPlayer`配置项，默认配置如下
 ```js
 // config.*.js
 AuiConfig = {
@@ -94,8 +96,10 @@ AuiConfig = {
 ```html
 <iframe src="https://zaxtyson.github.io/AnimeSearcher/#/aui-player?src=https%3A%2F%2Fapi.dogecloud.com%2Fplayer%2Fget.mp4%3Fvcode%3D5ac682e6f8231991%26userId%3D17%26ext%3D.mp4&name=%E5%85%89%E3%82%8B%E3%81%AA%E3%82%89%20-%20Goose%20house&danmu=https%3A%2F%2Fs-sh-17-dplayercdn.oss.dogecdn.com%2F1678963.json?style=default" allow="fullscreen" width="720px" height="480px" frameborder="0"></iframe>
 ```
-
-![Iframe测试效果]($withBase/assets/images/iframe-test.png)
+<p>
+  <img :src="$withBase('/assets/images/iframe-test.png')" alt="Iframe测试效果">
+</p>
+<!-- ![Iframe测试效果](/assets/images/iframe-test.png) -->
 
 支持的URL播放控制参数有: 
 
@@ -108,7 +112,7 @@ AuiConfig = {
 | title | 视频集标题， | AuiPlayer初始化时有效 |
 | webfull | 设定为true以启用dlplayer初始占满页面 | AuiPlayer初始化时有效 |
 | innerDanmaku | 是否启用内置弹幕，传递`false`以禁用自动弹幕匹配 | 多处有效 |
-| order | 指定当前播放列表的播放排序, 0|false=>原序, 1|true=>顺序排序, 2=>逆序排序, 3=>原序逆序 | 多处有效 |
+| order | 指定当前播放列表的播放排序: 0\|false=>原序, 1\|true=>顺序排序, 2=>逆序排序, 3=>原序逆序 | 多处有效 |
 
 > *多处有效指用到以AuiPlayer核心组件为基础的播放器的页面初始化时有效，如Anime分区播放器*
 
@@ -148,7 +152,7 @@ see: [修改系统设定](./####)
 
 主题的切换除了在应用内各处主题模块点击外，还可以在应用初始化时通过指定URL参数来指定一次主题。
 
-```text
+```html
 https://zaxtyson.github.io/AnimeSearcher/#/aui-player?style=default&blending=dew
 ```
 如上URL中末尾参数使用`style=default`指定了主题风格为"default", 使用`blending=dew`指定了主题配色为"dew", 

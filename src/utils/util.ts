@@ -259,13 +259,14 @@ export function deepAssign(...objs:Array<Object>){
  * Not deep mode.
  * @param {*} target 
  * @param {*} supplement 
+ * @param {Boolean} strict if counts the null as undefined?
  */
-export function objectSupplement<R extends Object, T extends Object> (target: R|null, supplement: T) {
+export function objectSupplement<R extends Object, T extends Object> (target: R|null, supplement: T, strict=false) {
   if(!target) return supplement;
   let current: unknown = null;
   for (let item in supplement) {
     current = (target as unknown as T)[item];
-    if (is_Defined(current))
+    if (strict? current!==undefined: is_Defined(current) )
       continue;
     (target as unknown as T)[item] = supplement[item];
   }
@@ -285,7 +286,7 @@ export function deepSupplement<R extends Object, T extends Object> (target: R|nu
   for (let item in supplement) {
     current = (target as unknown as T)[item];
     if (is_Defined(current)) {
-      if (!is_PlainObject(current as Object)) continue;
+      if (!is_PlainObject(current as Object)|| !is_PlainObject(supplement[item] as Object)) continue;
       deepSupplement(current as Object, supplement[item]); // The `current` is a reference which could be assigned.
     }
     else

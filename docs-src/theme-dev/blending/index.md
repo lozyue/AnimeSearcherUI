@@ -27,6 +27,7 @@ sidebarDepth: 2
   "name": "",
   "alias": "",
   "description": "",
+  "version": "",
   "author": { 
     "nick": "",
     "avatar": "",
